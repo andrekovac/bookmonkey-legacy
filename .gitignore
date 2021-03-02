@@ -1,0 +1,8 @@
+node_modules/
+api/data/
+web/dist/
+*.db
+*.db-journal
+.env
+.DS_Store
+npm-*.log

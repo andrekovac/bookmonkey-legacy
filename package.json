@@ -1,0 +1,14 @@
+{
+  "name": "bookmonkey",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BookMonkey book shop catalogue",
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev -w api",
+    "dev:web": "npm run dev -w web"
+  }
+}
