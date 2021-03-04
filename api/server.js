@@ -1,14 +1,20 @@
+const path = require('path');
 const express = require('express');
 const db = require('./db');
+const routes = require('./routes');
 
 const PORT = process.env.PORT || 4780;
 
 const app = express();
 app.use(express.json());
 
+app.use('/covers', express.static(path.join(__dirname, 'seed', 'covers'), { maxAge: '1d' }));
+
 app.get('/api/health', function (req, res) {
   res.json({ ok: true });
 });
+
+app.use('/api/v1', routes);
 
 if (require.main === module) {
   db.open();

@@ -1,0 +1,6 @@
+BookMonkey
+Copyright (c) 2021 BookMonkey contributors
+
+This product includes the book catalogue data and cover images from
+bookmonkey-api (api/seed/books.json, api/seed/covers/), MIT License,
+Copyright (c) workshops.de.
