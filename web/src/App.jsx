@@ -1,12 +1,19 @@
 import React from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import Header from './components/Header.jsx';
+import AppRoutes from './routes.jsx';
+import './styles/main.css';
 
 class App extends React.Component {
   render() {
     return (
-      <div className="app">
-        <h1>BookMonkey</h1>
-        <p>Coming soon.</p>
-      </div>
+      <BrowserRouter>
+        <Header />
+        <main className="container">
+          <AppRoutes />
+        </main>
+        <footer className="footer">BookMonkey &middot; Ihr Buchladen</footer>
+      </BrowserRouter>
     );
   }
 }

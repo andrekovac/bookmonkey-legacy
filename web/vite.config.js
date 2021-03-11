@@ -6,7 +6,8 @@ export default defineConfig({
   server: {
     port: 5180,
     proxy: {
-      '/api': 'http://localhost:4780'
+      '/api': 'http://localhost:4780',
+      '/covers': 'http://localhost:4780'
     }
   }
 });
