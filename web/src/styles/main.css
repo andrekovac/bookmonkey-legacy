@@ -157,3 +157,33 @@ textarea {
 .pager-page {
   margin: 0 16px;
 }
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.toolbar > * {
+  margin: 0 12px 8px 0;
+}
+
+.search-box {
+  display: flex;
+}
+
+.search-box input {
+  width: 260px;
+  margin-right: 6px;
+}
+
+.search-box button {
+  margin-right: 6px;
+}
+
+.empty {
+  color: #6d645b;
+  padding: 40px 0;
+  text-align: center;
+}

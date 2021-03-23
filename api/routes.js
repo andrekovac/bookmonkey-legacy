@@ -24,16 +24,48 @@ function toBook(row) {
   };
 }
 
-// GET /api/v1/books?_page=1&_limit=12
+const SORT_COLUMNS = {
+  title: 'title',
+  author: 'author',
+  price: 'price',
+  published: 'published_at',
+  publisher: 'publisher'
+};
+
+// GET /api/v1/books?q=potter&publisher=Bloomsbury&sort=price&order=desc&_page=1&_limit=12
 router.get('/books', function (req, res) {
   const limit = utils.toInt(req.query._limit, 12);
   const page = utils.toInt(req.query._page, 1);
   const offset = (page - 1) * limit;
 
-  const rows = db.open()
-    .prepare('SELECT * FROM books ORDER BY title LIMIT ? OFFSET ?')
-    .all(limit, offset);
+  const where = [];
+  const params = [];
+  if (req.query.q) {
+    where.push('(title LIKE ? OR author LIKE ?)');
+    params.push('%' + req.query.q + '%', '%' + req.query.q + '%');
+  }
+  if (req.query.publisher) {
+    where.push('publisher = ?');
+    params.push(req.query.publisher);
+  }
+
+  const sort = SORT_COLUMNS[req.query.sort] || 'title';
+  const order = String(req.query.order).toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+
+  let sql = 'SELECT * FROM books';
+  if (where.length) sql += ' WHERE ' + where.join(' AND ');
+  sql += ' ORDER BY ' + sort + ' ' + order + ', id LIMIT ? OFFSET ?';
+  params.push(limit, offset);
+
+  const rows = db.open().prepare(sql).all(...params);
   res.json(rows.map(toBook));
+});
+
+router.get('/publishers', function (req, res) {
+  const rows = db.open()
+    .prepare('SELECT publisher, COUNT(*) AS count FROM books WHERE publisher IS NOT NULL GROUP BY publisher ORDER BY publisher')
+    .all();
+  res.json(rows);
 });
 
 router.get('/books/:isbn', function (req, res) {
