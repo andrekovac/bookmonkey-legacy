@@ -68,10 +68,47 @@ router.get('/publishers', function (req, res) {
   res.json(rows);
 });
 
+function findBook(isbn) {
+  return db.open().prepare('SELECT * FROM books WHERE isbn = ?').get(isbn);
+}
+
 router.get('/books/:isbn', function (req, res) {
-  const row = db.open().prepare('SELECT * FROM books WHERE isbn = ?').get(req.params.isbn);
+  const row = findBook(req.params.isbn);
   if (!row) return res.status(404).json({ error: 'book not found' });
   res.json(toBook(row));
+});
+
+// whole series of a book, in reading order
+// { position: 2, total: 3, books: [{isbn, title}, ...] }
+router.get('/books/:isbn/series', function (req, res) {
+  const start = findBook(req.params.isbn);
+  if (!start) return res.status(404).json({ error: 'book not found' });
+
+  const seen = {};
+  let first = start;
+  // walk back to the first volume (max 50, in case somebody built a loop in the admin)
+  for (let i = 0; i < 50 && first.predecessor_isbn; i++) {
+    const prev = findBook(first.predecessor_isbn);
+    if (!prev || seen[prev.isbn]) break;
+    seen[prev.isbn] = true;
+    first = prev;
+  }
+
+  const books = [];
+  let current = first;
+  const visited = {};
+  while (current && !visited[current.isbn] && books.length < 50) {
+    visited[current.isbn] = true;
+    books.push({ isbn: current.isbn, title: current.title });
+    current = current.successor_isbn ? findBook(current.successor_isbn) : null;
+  }
+
+  let position = 0;
+  books.forEach(function (b, idx) {
+    if (b.isbn === start.isbn) position = idx + 1;
+  });
+
+  res.json({ position: position, total: books.length, books: books });
 });
 
 module.exports = router;

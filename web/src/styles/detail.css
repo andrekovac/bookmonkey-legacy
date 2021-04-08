@@ -1,0 +1,89 @@
+.detail-back {
+  display: inline-block;
+  margin-bottom: 12px;
+}
+
+.detail-main {
+  display: flex;
+  align-items: flex-start;
+}
+
+.detail-cover {
+  width: 260px;
+  border: 1px solid #e6ded3;
+  margin-right: 28px;
+  background: #eee;
+}
+
+.detail-info {
+  flex: 1;
+}
+
+.detail-title {
+  margin: 0 0 4px;
+}
+
+.detail-subtitle {
+  margin: 0 0 8px;
+  font-weight: normal;
+  color: #6d645b;
+}
+
+.detail-author {
+  font-size: 18px;
+  margin-bottom: 14px;
+}
+
+.detail-facts th {
+  text-align: left;
+  color: #6d645b;
+  font-weight: normal;
+  padding: 2px 16px 2px 0;
+}
+
+.detail-price {
+  font-size: 24px;
+  font-weight: bold;
+  color: #7a3e1d;
+  margin: 16px 0;
+}
+
+.detail-abstract {
+  margin-top: 24px;
+  max-width: 760px;
+}
+
+/* series */
+
+.series-nav {
+  margin-top: 20px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #e6ded3;
+  border-radius: 4px;
+}
+
+.series-nav__position {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.series-nav__links {
+  display: flex;
+  justify-content: space-between;
+}
+
+.series-nav__item--missing {
+  color: #a0968b;
+  font-style: italic;
+}
+
+.series-nav__list {
+  margin: 10px 0 0;
+  padding-left: 22px;
+  font-size: 14px;
+}
+
+.series-nav__list li.current {
+  font-weight: bold;
+}
