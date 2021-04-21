@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning server.js",
     "dev": "node --disable-warning=ExperimentalWarning --watch server.js",
-    "db:reset": "node --disable-warning=ExperimentalWarning scripts/reset-db.js"
+    "db:reset": "node --disable-warning=ExperimentalWarning scripts/reset-db.js",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/*.test.js\""
   },
   "dependencies": {
     "express": "4.22.3"

@@ -10,6 +10,7 @@
   "scripts": {
     "dev:api": "npm run dev -w api",
     "dev:web": "npm run dev -w web",
-    "db:reset": "npm run db:reset -w api"
+    "db:reset": "npm run db:reset -w api",
+    "test": "npm test -w api"
   }
 }
