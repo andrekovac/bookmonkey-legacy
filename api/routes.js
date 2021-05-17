@@ -1,6 +1,8 @@
 const express = require('express');
 const db = require('./db');
 const utils = require('./lib/utils');
+const auth = require('./lib/auth');
+const session = require('./lib/session');
 
 const router = express.Router();
 
@@ -109,6 +111,38 @@ router.get('/books/:isbn/series', function (req, res) {
   });
 
   res.json({ position: position, total: books.length, books: books });
+});
+
+// ---------------------------------------------------------------------------
+// auth
+
+router.post('/auth/login', function (req, res) {
+  const email = req.body && req.body.email;
+  const password = req.body && req.body.password;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'email and password required' });
+  }
+  const user = auth.findUserByEmail(email);
+  if (!user || !auth.checkPassword(password, user.password)) {
+    return res.status(401).json({ error: 'wrong email or password' });
+  }
+  session.start(res, user);
+  res.json(auth.publicUser(user));
+});
+
+router.post('/auth/logout', function (req, res) {
+  session.destroy(res);
+  res.json({ ok: true });
+});
+
+router.get('/auth/me', function (req, res) {
+  if (!req.session) return res.status(401).json({ error: 'not logged in' });
+  const user = auth.findUser(req.session.uid);
+  if (!user) {
+    session.destroy(res);
+    return res.status(401).json({ error: 'not logged in' });
+  }
+  res.json(auth.publicUser(user));
 });
 
 module.exports = router;

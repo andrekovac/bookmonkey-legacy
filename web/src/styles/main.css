@@ -187,3 +187,30 @@ textarea {
   padding: 40px 0;
   text-align: center;
 }
+
+/* forms */
+
+.form {
+  max-width: 380px;
+}
+
+.form label {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #6d645b;
+}
+
+.form input,
+.form select,
+.form textarea {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  color: #2b2b2b;
+}
+
+.nav-user .nav-name {
+  margin-left: 18px;
+  opacity: 0.85;
+}

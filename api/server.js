@@ -2,11 +2,13 @@ const path = require('path');
 const express = require('express');
 const db = require('./db');
 const routes = require('./routes');
+const session = require('./lib/session');
 
 const PORT = process.env.PORT || 4780;
 
 const app = express();
 app.use(express.json());
+app.use(session.middleware);
 
 app.use('/covers', express.static(path.join(__dirname, 'seed', 'covers'), { maxAge: '1d' }));
 
