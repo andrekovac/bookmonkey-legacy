@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>BookMonkey Admin</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 14px; margin: 0; background: #f4f4f4; color: #222; }
+    #top { background: #333; color: #fff; padding: 10px 16px; }
+    #top a { color: #fff; margin-left: 12px; }
+    #top .right { float: right; }
+    #content { padding: 16px; }
+    .hidden { display: none; }
+    table { border-collapse: collapse; width: 100%; background: #fff; }
+    th, td { border: 1px solid #ddd; padding: 4px 6px; text-align: left; vertical-align: top; }
+    th { background: #eee; }
+    tr:hover td { background: #fafae0; }
+    td.num { text-align: right; }
+    .msg { padding: 6px 10px; margin: 8px 0; }
+    .msg.ok { background: #d9f2d0; }
+    .msg.err { background: #f7d4d0; }
+    fieldset { background: #fff; border: 1px solid #ccc; margin-bottom: 12px; }
+    label { display: inline-block; width: 140px; }
+    .row { margin: 4px 0; }
+    input[type=text], input[type=number], input[type=email], input[type=password], textarea { width: 360px; }
+    textarea { height: 90px; }
+    button { margin-right: 6px; }
+    #filter { width: 240px; }
+  </style>
+</head>
+<body>
+  <div id="top">
+    <b>BookMonkey Admin</b>
+    <a href="#books">Bücher</a>
+    <a href="#new">Neues Buch</a>
+    <a href="#users">Benutzer</a>
+    <span class="right"><span id="who"></span> <a href="#" id="logout">Abmelden</a></span>
+  </div>
+
+  <div id="content">
+    <div id="message" class="msg hidden"></div>
+
+    <div id="login-view" class="hidden">
+      <h2>Anmelden</h2>
+      <form id="login-form">
+        <div class="row"><label>E-Mail</label><input type="email" name="email"></div>
+        <div class="row"><label>Passwort</label><input type="password" name="password"></div>
+        <div class="row"><label></label><button type="submit">Anmelden</button></div>
+      </form>
+    </div>
+
+    <div id="books-view" class="hidden">
+      <h2>Bücher</h2>
+      <p>Filter: <input type="text" id="filter" placeholder="Titel, Autor, ISBN"> <span id="count"></span></p>
+      <table>
+        <thead>
+          <tr><th>ISBN</th><th>Titel</th><th>Autor</th><th>Verlag</th><th>Preis</th><th>Seiten</th><th></th></tr>
+        </thead>
+        <tbody id="books-body"></tbody>
+      </table>
+    </div>
+
+    <div id="edit-view" class="hidden">
+      <h2 id="edit-title">Buch bearbeiten</h2>
+      <form id="book-form">
+        <fieldset>
+          <div class="row"><label>ISBN</label><input type="text" name="isbn"></div>
+          <div class="row"><label>Titel</label><input type="text" name="title"></div>
+          <div class="row"><label>Untertitel</label><input type="text" name="subtitle"></div>
+          <div class="row"><label>Autor</label><input type="text" name="author"></div>
+          <div class="row"><label>Co-Autoren</label><input type="text" name="coAuthors" placeholder="kommagetrennt"></div>
+          <div class="row"><label>Verlag</label><input type="text" name="publisher"></div>
+          <div class="row"><label>Seiten</label><input type="number" name="numPages"></div>
+          <div class="row"><label>Erschienen</label><input type="text" name="publishedAt" placeholder="JJJJ-MM-TT"></div>
+          <div class="row"><label>Preis (netto)</label><input type="text" name="price"> EUR</div>
+          <div class="row"><label>Vorheriger Band</label><input type="text" name="predecessorIsbn" placeholder="ISBN"></div>
+          <div class="row"><label>Nächster Band</label><input type="text" name="successorIsbn" placeholder="ISBN"></div>
+          <div class="row"><label>Beschreibung</label><textarea name="abstract"></textarea></div>
+        </fieldset>
+        <button type="submit">Speichern</button>
+        <button type="button" id="cancel">Abbrechen</button>
+        <button type="button" id="delete">Löschen</button>
+      </form>
+    </div>
+
+    <div id="users-view" class="hidden">
+      <h2>Benutzer</h2>
+      <table>
+        <thead><tr><th>ID</th><th>E-Mail</th><th>Name</th><th>Rolle</th></tr></thead>
+        <tbody id="users-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
