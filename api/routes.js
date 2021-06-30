@@ -2,6 +2,8 @@ const express = require('express');
 const db = require('./db');
 const utils = require('./lib/utils');
 const isbnLib = require('./lib/isbn');
+const pricing = require('./lib/pricing');
+const money = require('./lib/money');
 const auth = require('./lib/auth');
 const session = require('./lib/session');
 
@@ -20,6 +22,7 @@ function toBook(row) {
     numPages: row.num_pages,
     publishedAt: row.published_at,
     price: row.price,
+    priceGross: pricing.gross(row.price),
     currency: row.currency,
     predecessorIsbn: row.predecessor_isbn,
     successorIsbn: row.successor_isbn,
@@ -175,7 +178,7 @@ function validateBook(body, isNew) {
   }
   if (isNew && !isbnLib.isValid(body.isbn)) errors.push('isbn is not valid');
   if (body.price !== undefined && body.price !== null && body.price !== '') {
-    if (isNaN(parseFloat(body.price)) || parseFloat(body.price) < 0) errors.push('price must be a positive number');
+    if (isNaN(money.parse(body.price)) || money.parse(body.price) < 0) errors.push('price must be a positive number');
   }
   if (body.numPages !== undefined && body.numPages !== null && body.numPages !== '') {
     if (isNaN(parseInt(body.numPages, 10))) errors.push('numPages must be a number');
@@ -191,7 +194,7 @@ function columnValue(field, value) {
     case 'numPages':
       return parseInt(value, 10);
     case 'price':
-      return parseFloat(value);
+      return money.round(money.parse(value));
     case 'predecessorIsbn':
     case 'successorIsbn':
       return isbnLib.format(value);

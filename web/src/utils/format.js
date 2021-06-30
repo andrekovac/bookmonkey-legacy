@@ -12,3 +12,8 @@ export function joinAuthors(author, coAuthors) {
   if (all.length <= 1) return all.join('');
   return all.slice(0, -1).join(', ') + ' und ' + all[all.length - 1];
 }
+
+export function formatPrice(value, currency) {
+  if (value === null || value === undefined || value === '') return '';
+  return Number(value).toLocaleString('de-DE', { style: 'currency', currency: currency || 'EUR' });
+}

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import xhr from '../api/xhr';
 import withRouter from '../components/withRouter.jsx';
 import SeriesNav from '../components/SeriesNav.jsx';
+import Price from '../components/Price.jsx';
 import { formatDate, joinAuthors } from '../utils/format';
 import '../styles/detail.css';
 
@@ -67,7 +68,7 @@ class Detail extends React.Component {
                 <tr><th>ISBN</th><td>{book.isbn}</td></tr>
               </tbody>
             </table>
-            <div className="detail-price">{book.price} {book.currency}</div>
+            <div className="detail-price"><Price book={book} showVat /></div>
             <SeriesNav book={book} />
           </div>
         </div>

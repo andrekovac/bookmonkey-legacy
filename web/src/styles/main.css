@@ -214,3 +214,14 @@ textarea {
   margin-left: 18px;
   opacity: 0.85;
 }
+
+.price__vat {
+  font-size: 12px;
+  font-weight: normal;
+  color: #8a7f73;
+}
+
+.price--none {
+  color: #8a7f73;
+  font-weight: normal;
+}

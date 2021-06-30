@@ -1,6 +1,7 @@
 import React from 'react';
 import '../styles/book-card.css';
 import { Link } from 'react-router-dom';
+import Price from './Price.jsx';
 
 class BookCard extends React.Component {
   render() {
@@ -15,7 +16,7 @@ class BookCard extends React.Component {
           </div>
         </Link>
         <div className="book-card__footer">
-          <span className="book-card__price">{book.price} {book.currency}</span>
+          <span className="book-card__price"><Price book={book} /></span>
         </div>
       </div>
     );
