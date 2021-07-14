@@ -150,6 +150,74 @@ router.get('/auth/me', function (req, res) {
 });
 
 // ---------------------------------------------------------------------------
+// cart
+
+function cartFor(userId) {
+  const rows = db.open().prepare(`SELECT c.qty, c.added_at, b.id AS book_id, b.isbn, b.title, b.author, b.price, b.currency
+    FROM cart_items c JOIN books b ON b.id = c.book_id
+    WHERE c.user_id = ? ORDER BY c.id`).all(userId);
+
+  let total = 0;
+  const items = rows.map(function (r) {
+    const line = pricing.lineGross(r.price, r.qty);
+    total += line;
+    return {
+      book_id: r.book_id,
+      isbn: r.isbn,
+      title: r.title,
+      author: r.author,
+      qty: r.qty,
+      price: r.price,
+      price_gross: pricing.gross(r.price),
+      line_total: line,
+      currency: r.currency,
+      added_at: r.added_at
+    };
+  });
+  return { items: items, count: items.reduce((n, i) => n + i.qty, 0), total: money.round(total) };
+}
+
+router.get('/cart', auth.requireLogin, function (req, res) {
+  res.json(cartFor(req.session.uid));
+});
+
+router.post('/cart', auth.requireLogin, function (req, res) {
+  const book = findBook(req.body.isbn);
+  if (!book) return res.status(404).json({ error: 'book not found' });
+  const qty = Math.max(1, utils.toInt(req.body.qty, 1));
+  const conn = db.open();
+  const existing = conn.prepare('SELECT * FROM cart_items WHERE user_id = ? AND book_id = ?').get(req.session.uid, book.id);
+  if (existing) {
+    conn.prepare('UPDATE cart_items SET qty = qty + ? WHERE id = ?').run(qty, existing.id);
+  } else {
+    conn.prepare('INSERT INTO cart_items (user_id, book_id, qty, added_at) VALUES (?, ?, ?, ?)')
+      .run(req.session.uid, book.id, qty, utils.now());
+  }
+  res.status(201).json(cartFor(req.session.uid));
+});
+
+router.put('/cart/:isbn', auth.requireLogin, function (req, res) {
+  const book = findBook(req.params.isbn);
+  if (!book) return res.status(404).json({ error: 'book not found' });
+  const qty = utils.toInt(req.body.qty, 1);
+  const conn = db.open();
+  if (qty <= 0) {
+    conn.prepare('DELETE FROM cart_items WHERE user_id = ? AND book_id = ?').run(req.session.uid, book.id);
+  } else {
+    conn.prepare('UPDATE cart_items SET qty = ? WHERE user_id = ? AND book_id = ?').run(qty, req.session.uid, book.id);
+  }
+  res.json(cartFor(req.session.uid));
+});
+
+router.delete('/cart/:isbn', auth.requireLogin, function (req, res) {
+  const book = findBook(req.params.isbn);
+  if (book) {
+    db.open().prepare('DELETE FROM cart_items WHERE user_id = ? AND book_id = ?').run(req.session.uid, book.id);
+  }
+  res.json(cartFor(req.session.uid));
+});
+
+// ---------------------------------------------------------------------------
 // admin, everything below needs an admin session
 
 router.use(auth.requireAdmin);

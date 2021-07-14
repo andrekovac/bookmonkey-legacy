@@ -4,13 +4,16 @@ import xhr from '../api/xhr';
 import withRouter from '../components/withRouter.jsx';
 import SeriesNav from '../components/SeriesNav.jsx';
 import Price from '../components/Price.jsx';
+import * as cart from '../cart';
+import * as session from '../session';
 import { formatDate, joinAuthors } from '../utils/format';
 import '../styles/detail.css';
 
 class Detail extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { book: null, loading: true, error: null };
+    this.state = { book: null, loading: true, error: null, added: false };
+    this.addToCart = this.addToCart.bind(this);
   }
 
   componentDidMount() {
@@ -36,12 +39,23 @@ class Detail extends React.Component {
         return;
       }
       document.title = book.title + ' - BookMonkey';
-      this.setState({ loading: false, book: book });
+      this.setState({ loading: false, book: book, added: false });
+    });
+  }
+
+  addToCart() {
+    if (!session.getUser()) {
+      this.props.navigate('/login?next=' + encodeURIComponent(this.props.location.pathname));
+      return;
+    }
+    cart.add(this.state.book.isbn, 1, (err) => {
+      if (err) return this.setState({ error: err.message });
+      this.setState({ added: true });
     });
   }
 
   render() {
-    const { book, loading, error } = this.state;
+    const { book, loading, error, added } = this.state;
     if (loading) return <div className="loading">Lade...</div>;
     if (error) {
       return (
@@ -69,6 +83,8 @@ class Detail extends React.Component {
               </tbody>
             </table>
             <div className="detail-price"><Price book={book} showVat /></div>
+            <button className="primary" onClick={this.addToCart}>In den Warenkorb</button>
+            {added && <span className="detail-added"> Im Warenkorb!</span>}
             <SeriesNav book={book} />
           </div>
         </div>

@@ -87,3 +87,8 @@
 .series-nav__list li.current {
   font-weight: bold;
 }
+
+.detail-added {
+  color: #23621a;
+  margin-left: 8px;
+}

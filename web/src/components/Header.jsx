@@ -1,20 +1,27 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import * as session from '../session';
+import * as cart from '../cart';
 
 class Header extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { user: session.getUser() };
+    this.state = { user: session.getUser(), count: cart.getCart().count };
     this.logout = this.logout.bind(this);
   }
 
   componentDidMount() {
-    this.unsubscribe = session.subscribe(user => this.setState({ user: user }));
+    this.unsubscribe = session.subscribe(user => {
+      this.setState({ user: user });
+      if (user) cart.refresh();
+      else cart.clear();
+    });
+    this.unsubscribeCart = cart.subscribe(c => this.setState({ count: c.count }));
   }
 
   componentWillUnmount() {
     this.unsubscribe();
+    this.unsubscribeCart();
   }
 
   logout(e) {
@@ -34,6 +41,7 @@ class Header extends React.Component {
           </Link>
           <nav className="nav">
             <Link to="/">Katalog</Link>
+            {user && <span className="nav-cart">Warenkorb ({this.state.count})</span>}
             {user ? (
               <span className="nav-user">
                 <span className="nav-name">Hallo {user.name || user.email}</span>
