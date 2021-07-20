@@ -218,6 +218,81 @@ router.delete('/cart/:isbn', auth.requireLogin, function (req, res) {
 });
 
 // ---------------------------------------------------------------------------
+// orders
+
+const PAYMENT_TYPES = ['invoice', 'prepayment'];
+
+function loadOrder(id) {
+  const conn = db.open();
+  const order = conn.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+  if (!order) return null;
+  order.items = conn.prepare('SELECT isbn, title, qty, price_net FROM order_items WHERE order_id = ? ORDER BY id').all(id);
+  return order;
+}
+
+router.post('/orders', auth.requireLogin, function (req, res) {
+  const body = req.body || {};
+  const errors = [];
+  if (!body.name) errors.push('name is required');
+  if (!body.street) errors.push('street is required');
+  if (!/^[0-9]{5}$/.test(String(body.zip || ''))) errors.push('zip must have 5 digits');
+  if (!body.city) errors.push('city is required');
+  const payment = body.payment || 'invoice';
+  if (PAYMENT_TYPES.indexOf(payment) === -1) errors.push('unknown payment type');
+  if (errors.length) return res.status(400).json({ error: errors.join(', ') });
+
+  const conn = db.open();
+  const rows = conn.prepare(`SELECT c.qty, b.id AS book_id, b.isbn, b.title, b.price
+    FROM cart_items c JOIN books b ON b.id = c.book_id WHERE c.user_id = ?`).all(req.session.uid);
+  if (!rows.length) return res.status(400).json({ error: 'cart is empty' });
+
+  let totalNet = 0;
+  rows.forEach(function (r) {
+    totalNet += r.price * r.qty;
+  });
+  totalNet = money.round(totalNet);
+  const totalGross = pricing.gross(totalNet);
+
+  let orderId;
+  conn.exec('BEGIN');
+  try {
+    const result = conn.prepare(`INSERT INTO orders
+      (user_id, status, payment, total_net, total_gross, ship_name, ship_street, ship_zip, ship_city, note, created_at)
+      VALUES (?, 'new', ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+      .run(req.session.uid, payment, totalNet, totalGross, body.name, body.street, String(body.zip), body.city, body.note || null, utils.now());
+    orderId = Number(result.lastInsertRowid);
+
+    const insertItem = conn.prepare('INSERT INTO order_items (order_id, book_id, isbn, title, qty, price_net) VALUES (?, ?, ?, ?, ?, ?)');
+    rows.forEach(function (r) {
+      insertItem.run(orderId, r.book_id, r.isbn, r.title, r.qty, r.price);
+    });
+    conn.prepare('DELETE FROM cart_items WHERE user_id = ?').run(req.session.uid);
+    conn.exec('COMMIT');
+  } catch (err) {
+    conn.exec('ROLLBACK');
+    console.error('checkout failed', err);
+    return res.status(500).json({ error: 'could not place order' });
+  }
+
+  res.status(201).json(loadOrder(orderId));
+});
+
+router.get('/orders', auth.requireLogin, function (req, res) {
+  const rows = db.open()
+    .prepare('SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC')
+    .all(req.session.uid);
+  res.json(rows);
+});
+
+router.get('/orders/:id', auth.requireLogin, function (req, res) {
+  const order = loadOrder(req.params.id);
+  if (!order || (order.user_id !== req.session.uid && req.session.role !== 'admin')) {
+    return res.status(404).json({ error: 'order not found' });
+  }
+  res.json(order);
+});
+
+// ---------------------------------------------------------------------------
 // admin, everything below needs an admin session
 
 router.use(auth.requireAdmin);

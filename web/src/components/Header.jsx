@@ -41,10 +41,10 @@ class Header extends React.Component {
           </Link>
           <nav className="nav">
             <Link to="/">Katalog</Link>
-            {user && <span className="nav-cart">Warenkorb ({this.state.count})</span>}
+            {user && <Link to="/cart" className="nav-cart">Warenkorb ({this.state.count})</Link>}
             {user ? (
               <span className="nav-user">
-                <span className="nav-name">Hallo {user.name || user.email}</span>
+                <Link to="/account" className="nav-name">{user.name || user.email}</Link>
                 <a href="/logout" onClick={this.logout}>Abmelden</a>
               </span>
             ) : (
