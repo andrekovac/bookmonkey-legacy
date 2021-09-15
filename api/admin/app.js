@@ -53,7 +53,7 @@
   }
 
   function show(view) {
-    ['login-view', 'books-view', 'edit-view', 'users-view'].forEach(function (id) {
+    ['login-view', 'books-view', 'edit-view', 'orders-view', 'users-view'].forEach(function (id) {
       $(id).className = id === view ? '' : 'hidden';
     });
   }
@@ -219,6 +219,47 @@
     });
   });
 
+  // ---- orders
+
+  var STATUS_LABELS = { 'new': 'neu', paid: 'bezahlt', shipped: 'versendet', cancelled: 'storniert' };
+
+  function loadOrders() {
+    show('orders-view');
+    var status = $('order-status-filter').value;
+    api('GET', '/admin/orders' + (status ? '?status=' + status : '')).then(function (orders) {
+      $('orders-body').innerHTML = orders.map(function (o) {
+        var options = Object.keys(STATUS_LABELS).map(function (key) {
+          return '<option value="' + key + '"' + (key === o.status ? ' selected' : '') + '>' + STATUS_LABELS[key] + '</option>';
+        }).join('');
+        return '<tr>' +
+          '<td>' + o.id + '</td>' +
+          '<td>' + esc(o.created_at) + '</td>' +
+          '<td>' + esc(o.email) + '</td>' +
+          '<td>' + esc(o.ship_name) + '<br>' + esc(o.ship_street) + '<br>' + esc(o.ship_zip) + ' ' + esc(o.ship_city) +
+            (o.note ? '<br><i>' + esc(o.note) + '</i>' : '') + '</td>' +
+          '<td class="num">' + (o.item_count || 0) + '</td>' +
+          '<td>' + (o.payment === 'prepayment' ? 'Vorkasse' : 'Rechnung') + '</td>' +
+          '<td class="num">' + Number(o.total_gross).toFixed(2) + '</td>' +
+          '<td><select data-order="' + o.id + '" class="order-status">' + options + '</select></td>' +
+        '</tr>';
+      }).join('');
+    }).catch(function (err) {
+      message(err.message, true);
+    });
+  }
+
+  $('order-status-filter').addEventListener('change', loadOrders);
+
+  $('orders-body').addEventListener('change', function (e) {
+    if (!e.target.classList.contains('order-status')) return;
+    var id = e.target.getAttribute('data-order');
+    api('PUT', '/admin/orders/' + id, { status: e.target.value }).then(function () {
+      message('Bestellung ' + id + ' gespeichert');
+    }).catch(function (err) {
+      message(err.message, true);
+    });
+  });
+
   // ---- users
 
   function loadUsers() {
@@ -245,6 +286,8 @@
       editBook(decodeURIComponent(hash.slice(5)));
     } else if (hash === 'new') {
       newBook();
+    } else if (hash === 'orders') {
+      loadOrders();
     } else if (hash === 'users') {
       loadUsers();
     } else {

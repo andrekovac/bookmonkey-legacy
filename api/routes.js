@@ -398,6 +398,30 @@ router.delete('/books/:isbn', function (req, res) {
   res.status(204).end();
 });
 
+router.get('/admin/orders', function (req, res) {
+  let sql = `SELECT o.*, u.email, (SELECT SUM(qty) FROM order_items i WHERE i.order_id = o.id) AS item_count
+    FROM orders o JOIN users u ON u.id = o.user_id`;
+  const params = [];
+  if (req.query.status) {
+    sql += ' WHERE o.status = ?';
+    params.push(req.query.status);
+  }
+  sql += ' ORDER BY o.id DESC';
+  res.json(db.open().prepare(sql).all(...params));
+});
+
+const ORDER_STATUS = ['new', 'paid', 'shipped', 'cancelled'];
+
+router.put('/admin/orders/:id', function (req, res) {
+  const status = req.body && req.body.status;
+  if (ORDER_STATUS.indexOf(status) === -1) {
+    return res.status(400).json({ error: 'status must be one of ' + ORDER_STATUS.join(', ') });
+  }
+  const result = db.open().prepare('UPDATE orders SET status = ? WHERE id = ?').run(status, req.params.id);
+  if (!result.changes) return res.status(404).json({ error: 'order not found' });
+  res.json(loadOrder(req.params.id));
+});
+
 router.get('/users', function (req, res) {
   const rows = db.open().prepare('SELECT * FROM users ORDER BY id').all();
   res.json(rows.map(auth.publicUser));

@@ -32,6 +32,7 @@
     <b>BookMonkey Admin</b>
     <a href="#books">Bücher</a>
     <a href="#new">Neues Buch</a>
+    <a href="#orders">Bestellungen</a>
     <a href="#users">Benutzer</a>
     <span class="right"><span id="who"></span> <a href="#" id="logout">Abmelden</a></span>
   </div>
@@ -80,6 +81,26 @@
         <button type="button" id="cancel">Abbrechen</button>
         <button type="button" id="delete">Löschen</button>
       </form>
+    </div>
+
+    <div id="orders-view" class="hidden">
+      <h2>Bestellungen</h2>
+      <p>
+        Status:
+        <select id="order-status-filter">
+          <option value="">alle</option>
+          <option value="new">neu</option>
+          <option value="paid">bezahlt</option>
+          <option value="shipped">versendet</option>
+          <option value="cancelled">storniert</option>
+        </select>
+      </p>
+      <table>
+        <thead>
+          <tr><th>Nr.</th><th>Datum</th><th>Kunde</th><th>Lieferadresse</th><th>Artikel</th><th>Zahlung</th><th>Brutto</th><th>Status</th></tr>
+        </thead>
+        <tbody id="orders-body"></tbody>
+      </table>
     </div>
 
     <div id="users-view" class="hidden">
