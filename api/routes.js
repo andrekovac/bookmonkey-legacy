@@ -134,6 +134,26 @@ router.post('/auth/login', function (req, res) {
   res.json(auth.publicUser(user));
 });
 
+router.post('/auth/register', function (req, res) {
+  const body = req.body || {};
+  const email = String(body.email || '').trim().toLowerCase();
+  const errors = [];
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors.push('email is not valid');
+  if (!body.password || String(body.password).length < 6) errors.push('password needs at least 6 characters');
+  if (body.name && String(body.name).length > 80) errors.push('name is too long');
+  if (errors.length) return res.status(400).json({ error: errors.join(', ') });
+
+  if (auth.findUserByEmail(email)) {
+    return res.status(409).json({ error: 'email is already registered' });
+  }
+  const result = db.open()
+    .prepare("INSERT INTO users (email, password, name, role, created_at) VALUES (?, ?, ?, 'customer', ?)")
+    .run(email, auth.hashPassword(body.password), body.name || null, utils.now());
+  const user = auth.findUser(Number(result.lastInsertRowid));
+  session.start(res, user);
+  res.status(201).json(auth.publicUser(user));
+});
+
 router.post('/auth/logout', function (req, res) {
   session.destroy(res);
   res.json({ ok: true });
@@ -147,6 +167,27 @@ router.get('/auth/me', function (req, res) {
     return res.status(401).json({ error: 'not logged in' });
   }
   res.json(auth.publicUser(user));
+});
+
+// change own name / password
+router.put('/auth/me', auth.requireLogin, function (req, res) {
+  const user = auth.findUser(req.session.uid);
+  if (!user) return res.status(401).json({ error: 'not logged in' });
+  const body = req.body || {};
+
+  if (body.password) {
+    if (!body.currentPassword || !auth.checkPassword(body.currentPassword, user.password)) {
+      return res.status(400).json({ error: 'current password is wrong' });
+    }
+    if (String(body.password).length < 6) {
+      return res.status(400).json({ error: 'password needs at least 6 characters' });
+    }
+    db.open().prepare('UPDATE users SET password = ? WHERE id = ?').run(auth.hashPassword(body.password), user.id);
+  }
+  if (body.name !== undefined) {
+    db.open().prepare('UPDATE users SET name = ? WHERE id = ?').run(String(body.name).slice(0, 80), user.id);
+  }
+  res.json(auth.publicUser(auth.findUser(user.id)));
 });
 
 // ---------------------------------------------------------------------------

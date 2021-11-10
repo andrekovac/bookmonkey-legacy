@@ -225,3 +225,12 @@ textarea {
   color: #8a7f73;
   font-weight: normal;
 }
+
+.profile-form {
+  margin-bottom: 28px;
+}
+
+.not-found {
+  text-align: center;
+  padding: 60px 0;
+}

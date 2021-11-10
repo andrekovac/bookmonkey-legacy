@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import withRouter from '../components/withRouter.jsx';
 import * as session from '../session';
 
@@ -63,6 +64,9 @@ class Login extends React.Component {
             {this.state.busy ? 'Moment...' : 'Anmelden'}
           </button>
         </form>
+        <p>
+          Neu bei BookMonkey? <Link to="/register">Kundenkonto anlegen</Link>
+        </p>
       </div>
     );
   }

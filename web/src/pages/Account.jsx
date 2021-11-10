@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import xhr from '../api/xhr';
 import withRouter from '../components/withRouter.jsx';
 import * as session from '../session';
+import ProfileForm from '../components/ProfileForm.jsx';
 import { formatDate, formatPrice } from '../utils/format';
 
 const STATUS = {
@@ -46,6 +47,7 @@ class Account extends React.Component {
       <div className="account">
         <h1>Mein Konto</h1>
         {user && <p>{user.name} &lt;{user.email}&gt;</p>}
+        {user && <ProfileForm />}
         <h2>Bestellungen</h2>
         {error && <div className="error">{error}</div>}
         {loading && <div className="loading">Lade...</div>}
