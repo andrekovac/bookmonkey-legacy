@@ -15,8 +15,12 @@ app.use(session.middleware);
 
 app.use('/covers', express.static(path.join(__dirname, 'seed', 'covers'), { maxAge: '1d' }));
 
-// old school admin page for the shop staff, talks to /api/v1 directly
-app.use('/admin', express.static(path.join(__dirname, 'admin')));
+// old admin page for the shop staff, talks to /api/v1 directly.
+// stays here until the admin in the web app is done
+app.use('/admin-old', express.static(path.join(__dirname, 'legacy', 'admin-old')));
+app.get('/admin', function (req, res) {
+  res.redirect('/admin-old/');
+});
 
 app.get('/api/health', function (req, res) {
   res.json({ ok: true, time: new Date().toISOString() });
