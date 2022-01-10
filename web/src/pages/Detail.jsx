@@ -4,10 +4,12 @@ import xhr from '../api/xhr';
 import withRouter from '../components/withRouter.jsx';
 import SeriesNav from '../components/SeriesNav.jsx';
 import Price from '../components/Price.jsx';
+import Availability from '../components/Availability.jsx';
 import * as cart from '../cart';
 import * as session from '../session';
 import { formatDate, joinAuthors } from '../utils/format';
 import '../styles/detail.css';
+import '../styles/library.css';
 
 class Detail extends React.Component {
   constructor(props) {
@@ -85,6 +87,7 @@ class Detail extends React.Component {
             <div className="detail-price"><Price book={book} showVat /></div>
             <button className="primary" onClick={this.addToCart}>In den Warenkorb</button>
             {added && <span className="detail-added"> Im Warenkorb!</span>}
+            <Availability isbn={book.isbn} />
             <SeriesNav book={book} />
           </div>
         </div>

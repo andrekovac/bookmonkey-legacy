@@ -6,9 +6,31 @@ function pad(n) {
 
 // "2021-03-04 15:40:12", local time of the server (shop is in Germany)
 function now() {
-  const d = new Date();
+  return stamp(new Date());
+}
+
+function stamp(d) {
   return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
     pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}
+
+// "2022-01-10" (local)
+function today() {
+  return now().slice(0, 10);
+}
+
+// today + n days as "YYYY-MM-DD", n can be negative
+function addDays(n, from) {
+  const d = from ? new Date(from.slice(0, 10) + 'T12:00:00') : new Date();
+  d.setDate(d.getDate() + n);
+  return stamp(d).slice(0, 10);
+}
+
+// copies get a printed label "BM-00042"
+function barcode(n) {
+  let s = String(n);
+  while (s.length < 5) s = '0' + s;
+  return 'BM-' + s;
 }
 
 function toInt(value, fallback) {
@@ -25,4 +47,4 @@ function parseJson(value, fallback) {
   }
 }
 
-module.exports = { now, pad, toInt, parseJson };
+module.exports = { now, stamp, today, addDays, barcode, pad, toInt, parseJson };

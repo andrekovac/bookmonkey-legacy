@@ -58,10 +58,37 @@ function importUsers(db, users) {
   return users.length;
 }
 
+// Exemplare for the company libraries (2022). Every book has at least one copy in Hamburg,
+// every third book a second one in Berlin. The books below are asked for a lot.
+const EXTRA_COPIES = {
+  '9780735211292': ['Berlin'], // Atomic Habits
+  '9781455586691': ['Hamburg', 'München'], // Deep Work
+  '9780374533557': ['München'], // Thinking, Fast and Slow
+  '9780747532699': ['München'] // Harry Potter 1
+};
+
+function importCopies(db) {
+  const books = db.prepare('SELECT id, isbn FROM books ORDER BY id').all();
+  const insert = db.prepare('INSERT INTO copies (book_id, barcode, location, shelf, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  let n = 0;
+  books.forEach(function (b, idx) {
+    const locations = ['Hamburg'];
+    if (idx % 3 === 0) locations.push('Berlin');
+    (EXTRA_COPIES[isbn.digitsOnly(b.isbn)] || []).forEach(l => locations.push(l));
+    locations.forEach(function (loc) {
+      n++;
+      const ts = utils.now();
+      insert.run(b.id, utils.barcode(n), loc, 'R' + (1 + (idx % 6)), 'available', ts, ts);
+    });
+  });
+  return n;
+}
+
 function run(db) {
   const n = importBooks(db, readBooks());
   const u = importUsers(db, USERS);
-  if (process.env.NODE_ENV !== 'test') console.log('[seed] ' + n + ' books, ' + u + ' users');
+  const c = importCopies(db);
+  if (process.env.NODE_ENV !== 'test') console.log('[seed] ' + n + ' books, ' + u + ' users, ' + c + ' copies');
 }
 
-module.exports = { run, importBooks, importUsers, readBooks, USERS };
+module.exports = { run, importBooks, importUsers, importCopies, readBooks, USERS };

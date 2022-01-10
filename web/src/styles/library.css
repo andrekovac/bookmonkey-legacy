@@ -1,0 +1,31 @@
+/* Bibliothek: availability, loans, reservations */
+
+.availability {
+  margin: 16px 0;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #e6ded3;
+  border-left: 4px solid #4f7a3a;
+  border-radius: 4px;
+}
+
+.availability--loading,
+.availability--none {
+  border-left-color: #c9bfb3;
+  color: #6d645b;
+}
+
+.availability__ok {
+  color: #3d6a2a;
+}
+
+.availability__out {
+  color: #9a4b12;
+}
+
+.availability__locations {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  font-size: 14px;
+  color: #6d645b;
+}

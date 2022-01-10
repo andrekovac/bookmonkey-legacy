@@ -117,6 +117,24 @@ router.get('/books/:isbn/series', function (req, res) {
   res.json({ position: position, total: books.length, books: books });
 });
 
+// how many copies are on the shelf, per location
+// { total: 3, available: 1, locations: [{location: 'Hamburg', total: 2, available: 1}] }
+router.get('/books/:isbn/availability', function (req, res) {
+  const book = findBook(req.params.isbn);
+  if (!book) return res.status(404).json({ error: 'book not found' });
+  const rows = db.open().prepare(`SELECT location,
+      COUNT(*) AS total,
+      SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) AS available
+    FROM copies WHERE book_id = ? AND status NOT IN ('lost') GROUP BY location ORDER BY location`).all(book.id);
+  let total = 0;
+  let available = 0;
+  rows.forEach(function (r) {
+    total += r.total;
+    available += r.available;
+  });
+  res.json({ isbn: book.isbn, total: total, available: available, locations: rows });
+});
+
 // ---------------------------------------------------------------------------
 // auth
 
@@ -466,6 +484,93 @@ router.put('/admin/orders/:id', function (req, res) {
 router.get('/users', function (req, res) {
   const rows = db.open().prepare('SELECT * FROM users ORDER BY id').all();
   res.json(rows.map(auth.publicUser));
+});
+
+// ---------------------------------------------------------------------------
+// Exemplare (copies), admin only
+
+const COPY_STATUS = ['available', 'on_loan', 'on_hold', 'repair', 'lost'];
+const LOCATIONS = ['Hamburg', 'Berlin', 'München'];
+
+function copyRow(id) {
+  return db.open().prepare(`SELECT c.*, b.isbn, b.title FROM copies c JOIN books b ON b.id = c.book_id WHERE c.id = ?`).get(id);
+}
+
+// GET /admin/copies?isbn=...&status=...&location=...
+router.get('/admin/copies', function (req, res) {
+  let sql = 'SELECT c.*, b.isbn, b.title, b.author FROM copies c JOIN books b ON b.id = c.book_id';
+  const where = [];
+  const params = [];
+  if (req.query.isbn) {
+    where.push('b.isbn = ?');
+    params.push(req.query.isbn);
+  }
+  if (req.query.status) {
+    where.push('c.status = ?');
+    params.push(req.query.status);
+  }
+  if (req.query.location) {
+    where.push('c.location = ?');
+    params.push(req.query.location);
+  }
+  if (req.query.q) {
+    where.push('(b.title LIKE ? OR c.barcode LIKE ?)');
+    params.push('%' + req.query.q + '%', '%' + req.query.q + '%');
+  }
+  if (where.length) sql += ' WHERE ' + where.join(' AND ');
+  sql += ' ORDER BY b.title, c.barcode LIMIT 500';
+  res.json(db.open().prepare(sql).all(...params));
+});
+
+router.post('/admin/books/:isbn/copies', function (req, res) {
+  const book = findBook(req.params.isbn);
+  if (!book) return res.status(404).json({ error: 'book not found' });
+  const body = req.body || {};
+  const location = body.location || 'Hamburg';
+  if (LOCATIONS.indexOf(location) === -1) return res.status(400).json({ error: 'unknown location' });
+  const count = Math.min(20, Math.max(1, utils.toInt(body.count, 1)));
+
+  const conn = db.open();
+  const insert = conn.prepare('INSERT INTO copies (book_id, barcode, location, shelf, status, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  const created = [];
+  for (let i = 0; i < count; i++) {
+    // barcode: next free number. Achtung: printed labels exist for BM-00001..BM-00200 already
+    const max = conn.prepare('SELECT MAX(id) AS max FROM copies').get().max || 0;
+    const code = body.barcode && count === 1 ? String(body.barcode).trim() : utils.barcode(max + 1);
+    if (conn.prepare('SELECT id FROM copies WHERE barcode = ?').get(code)) {
+      return res.status(409).json({ error: 'barcode exists already: ' + code });
+    }
+    const r = insert.run(book.id, code, location, body.shelf || null, 'available', body.note || null, utils.now(), utils.now());
+    created.push(copyRow(Number(r.lastInsertRowid)));
+  }
+  res.status(201).json(created);
+});
+
+router.put('/admin/copies/:id', function (req, res) {
+  const copy = copyRow(req.params.id);
+  if (!copy) return res.status(404).json({ error: 'copy not found' });
+  const body = req.body || {};
+  if (body.status !== undefined && COPY_STATUS.indexOf(body.status) === -1) {
+    return res.status(400).json({ error: 'status must be one of ' + COPY_STATUS.join(', ') });
+  }
+  if (body.location !== undefined && LOCATIONS.indexOf(body.location) === -1) {
+    return res.status(400).json({ error: 'unknown location' });
+  }
+  db.open().prepare('UPDATE copies SET status = ?, location = ?, shelf = ?, note = ?, updated_at = ? WHERE id = ?').run(
+    body.status !== undefined ? body.status : copy.status,
+    body.location !== undefined ? body.location : copy.location,
+    body.shelf !== undefined ? body.shelf : copy.shelf,
+    body.note !== undefined ? body.note : copy.note,
+    utils.now(),
+    copy.id
+  );
+  res.json(copyRow(copy.id));
+});
+
+router.delete('/admin/copies/:id', function (req, res) {
+  const result = db.open().prepare('DELETE FROM copies WHERE id = ?').run(req.params.id);
+  if (!result.changes) return res.status(404).json({ error: 'copy not found' });
+  res.status(204).end();
 });
 
 module.exports = router;
