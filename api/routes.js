@@ -6,6 +6,7 @@ const pricing = require('./lib/pricing');
 const money = require('./lib/money');
 const auth = require('./lib/auth');
 const session = require('./lib/session');
+const loans = require('./services/loans');
 
 const router = express.Router();
 
@@ -349,6 +350,52 @@ router.get('/orders/:id', auth.requireLogin, function (req, res) {
     return res.status(404).json({ error: 'order not found' });
   }
   res.json(order);
+});
+
+// ---------------------------------------------------------------------------
+// Ausleihe (loans)
+
+// errors from services/* have a status, everything else is a 500
+function sendError(res, err) {
+  if (err.status) return res.status(err.status).json({ message: err.message });
+  console.error(err);
+  res.status(500).json({ message: 'internal error' });
+}
+
+// my loans. ?history=1 also returns the returned ones
+router.get('/loans', auth.requireLogin, function (req, res) {
+  const rows = req.query.history ? loans.historyFor(req.session.uid) : loans.openLoansFor(req.session.uid);
+  res.json(rows.map(loans.decorate));
+});
+
+router.post('/loans', auth.requireLogin, function (req, res) {
+  const book = findBook(req.body && req.body.isbn);
+  if (!book) return res.status(404).json({ message: 'book not found' });
+  try {
+    const loan = loans.borrow(req.session.uid, book, { location: req.body.location });
+    res.status(201).json(loan);
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.get('/loans/:id', auth.requireLogin, function (req, res) {
+  const loan = loans.findLoan(req.params.id);
+  if (!loan) return res.status(404).json({ message: 'loan not found' });
+  res.json(loans.decorate(loan));
+});
+
+// self service return (drop box next to the shelf)
+router.post('/loans/:id/return', auth.requireLogin, function (req, res) {
+  const loan = loans.findLoan(req.params.id);
+  if (!loan || (loan.user_id !== req.session.uid && req.session.role !== 'admin')) {
+    return res.status(404).json({ message: 'loan not found' });
+  }
+  try {
+    res.json(loans.giveBack(loan.id));
+  } catch (err) {
+    sendError(res, err);
+  }
 });
 
 // ---------------------------------------------------------------------------

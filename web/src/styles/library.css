@@ -29,3 +29,11 @@
   font-size: 14px;
   color: #6d645b;
 }
+
+.availability__actions {
+  margin-top: 10px;
+}
+
+.availability__actions select {
+  margin-right: 8px;
+}

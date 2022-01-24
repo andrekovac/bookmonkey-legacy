@@ -31,7 +31,7 @@ export function request(method, url, body, cb) {
     if (xhr.status >= 200 && xhr.status < 300) {
       cb(null, data, xhr);
     } else {
-      const err = new Error((data && data.error) || 'Request failed (' + xhr.status + ')');
+      const err = new Error((data && (data.error || data.message)) || 'Request failed (' + xhr.status + ')');
       err.status = xhr.status;
       err.data = data;
       cb(err, null, xhr);
