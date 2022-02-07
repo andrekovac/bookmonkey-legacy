@@ -41,6 +41,7 @@ class Header extends React.Component {
           </Link>
           <nav className="nav">
             <Link to="/">Katalog</Link>
+            {user && <Link to="/loans">Ausleihen</Link>}
             {user && <Link to="/cart" className="nav-cart">Warenkorb ({this.state.count})</Link>}
             {user ? (
               <span className="nav-user">

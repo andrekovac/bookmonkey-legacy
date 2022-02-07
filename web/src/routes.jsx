@@ -8,6 +8,7 @@ import Checkout from './pages/Checkout.jsx';
 import Account from './pages/Account.jsx';
 import Register from './pages/Register.jsx';
 import NotFound from './pages/NotFound.jsx';
+import Loans from './pages/Loans.jsx';
 
 export default function AppRoutes() {
   return (
@@ -19,6 +20,7 @@ export default function AppRoutes() {
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/account" element={<Account />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/loans" element={<Loans />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
