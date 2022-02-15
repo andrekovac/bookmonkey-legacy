@@ -37,3 +37,71 @@
 .availability__actions select {
   margin-right: 8px;
 }
+
+/* loans page */
+
+.loans__hint {
+  color: #6d645b;
+  font-size: 14px;
+}
+
+.loans-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+
+.loans-table th {
+  text-align: left;
+  font-weight: normal;
+  color: #6d645b;
+  font-size: 13px;
+  border-bottom: 1px solid #e6ded3;
+  padding: 6px 8px;
+}
+
+.loans-table td {
+  border-bottom: 1px solid #f0e9df;
+  padding: 8px;
+  vertical-align: top;
+}
+
+.loans-table__cover {
+  width: 44px;
+}
+
+.loans-table__author {
+  font-size: 13px;
+  color: #8a7f73;
+}
+
+.loans-table__row--overdue {
+  background: #fdf1ec;
+}
+
+.loans-table__actions button {
+  display: block;
+  margin-bottom: 4px;
+  width: 130px;
+}
+
+.due {
+  font-size: 13px;
+  color: #6d645b;
+}
+
+.due--late {
+  color: #a3330f;
+  font-weight: bold;
+}
+
+.loan-detail__main {
+  display: flex;
+  margin-top: 14px;
+}
+
+.loan-detail__cover {
+  width: 160px;
+  margin-right: 24px;
+  border: 1px solid #e6ded3;
+}

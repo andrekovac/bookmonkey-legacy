@@ -3,6 +3,8 @@ const db = require('../db');
 const utils = require('../lib/utils');
 
 const LOAN_DAYS = 28; // 4 Wochen, Vorgabe der Personalabteilung
+const RENEW_DAYS = 14;
+const MAX_RENEWALS = 2;
 const MAX_OPEN_LOANS = 5;
 
 function fail(status, message) {
@@ -122,8 +124,24 @@ function giveBack(loanId) {
   return decorate(findLoan(loan.id));
 }
 
+// Verlängern: +14 Tage ab dem alten Rückgabedatum, max. 2 mal.
+// Achtung: overdue loans can be renewed too, the new date is then counted from today.
+function renew(loanId, userId) {
+  const loan = findLoan(loanId);
+  if (!loan || loan.user_id !== userId) throw fail(404, 'loan not found');
+  if (loan.returned_at) throw fail(409, 'loan was returned already');
+  if (loan.renewals >= MAX_RENEWALS) throw fail(409, 'loan can be renewed only ' + MAX_RENEWALS + ' times');
+
+  const base = loan.due_at < utils.today() ? utils.today() : loan.due_at;
+  const due = utils.addDays(RENEW_DAYS, base);
+  db.open().prepare('UPDATE loans SET due_at = ?, renewals = renewals + 1 WHERE id = ?').run(due, loan.id);
+  return decorate(findLoan(loan.id));
+}
+
 module.exports = {
   LOAN_DAYS,
+  RENEW_DAYS,
+  MAX_RENEWALS,
   MAX_OPEN_LOANS,
   fail,
   findLoan,
@@ -134,5 +152,6 @@ module.exports = {
   decorate,
   pickCopy,
   borrow,
-  giveBack
+  giveBack,
+  renew
 };

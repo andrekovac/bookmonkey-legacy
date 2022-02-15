@@ -385,6 +385,14 @@ router.get('/loans/:id', auth.requireLogin, function (req, res) {
   res.json(loans.decorate(loan));
 });
 
+router.post('/loans/:id/renew', auth.requireLogin, function (req, res) {
+  try {
+    res.json(loans.renew(req.params.id, req.session.uid));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 // self service return (drop box next to the shelf)
 router.post('/loans/:id/return', auth.requireLogin, function (req, res) {
   const loan = loans.findLoan(req.params.id);
