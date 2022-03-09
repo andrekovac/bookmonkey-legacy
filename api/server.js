@@ -4,6 +4,7 @@ const db = require('./db');
 const routes = require('./routes');
 const session = require('./lib/session');
 const logger = require('./lib/logger');
+const overdueJob = require('./jobs/overdue');
 
 const PORT = process.env.PORT || 4780;
 
@@ -46,6 +47,10 @@ if (require.main === module) {
   app.listen(PORT, function () {
     logger.info('BookMonkey API listening on http://localhost:' + PORT);
   });
+  // Mahnungen. JOBS=off to disable (e.g. on a second instance)
+  if (process.env.JOBS !== 'off') {
+    overdueJob.start(parseInt(process.env.OVERDUE_INTERVAL_MIN, 10) || 60);
+  }
 }
 
 module.exports = app;

@@ -7,6 +7,8 @@ const money = require('./lib/money');
 const auth = require('./lib/auth');
 const session = require('./lib/session');
 const loans = require('./services/loans');
+const mailer = require('./lib/mailer');
+const overdueJob = require('./jobs/overdue');
 
 const router = express.Router();
 
@@ -626,6 +628,44 @@ router.delete('/admin/copies/:id', function (req, res) {
   const result = db.open().prepare('DELETE FROM copies WHERE id = ?').run(req.params.id);
   if (!result.changes) return res.status(404).json({ error: 'copy not found' });
   res.status(204).end();
+});
+
+// ---------------------------------------------------------------------------
+// Ausleihe, admin side
+
+// GET /admin/loans?status=open|overdue|returned&q=
+router.get('/admin/loans', function (req, res) {
+  let sql = `SELECT l.*, c.barcode, c.location, b.isbn, b.title, u.email, u.name AS user_name
+    FROM loans l JOIN copies c ON c.id = l.copy_id JOIN books b ON b.id = c.book_id JOIN users u ON u.id = l.user_id`;
+  const where = [];
+  const params = [];
+  if (req.query.status === 'open') where.push('l.returned_at IS NULL');
+  if (req.query.status === 'returned') where.push('l.returned_at IS NOT NULL');
+  if (req.query.status === 'overdue') {
+    where.push('l.returned_at IS NULL AND l.due_at < ?');
+    params.push(utils.today());
+  }
+  if (req.query.q) {
+    where.push('(b.title LIKE ? OR u.email LIKE ? OR u.name LIKE ? OR c.barcode = ?)');
+    params.push('%' + req.query.q + '%', '%' + req.query.q + '%', '%' + req.query.q + '%', req.query.q);
+  }
+  if (where.length) sql += ' WHERE ' + where.join(' AND ');
+  sql += ' ORDER BY l.due_at LIMIT 500';
+  res.json(db.open().prepare(sql).all(...params).map(loans.decorate));
+});
+
+router.get('/admin/outbox', function (req, res) {
+  res.json(mailer.list({ status: req.query.status, limit: utils.toInt(req.query._limit, 200) }));
+});
+
+router.post('/admin/outbox/:id/sent', function (req, res) {
+  if (!mailer.markSent(req.params.id)) return res.status(404).json({ error: 'mail not found' });
+  res.json({ ok: true });
+});
+
+// run the reminder job now instead of waiting for the interval
+router.post('/admin/jobs/overdue', function (req, res) {
+  res.json(overdueJob.run() || { running: true });
 });
 
 module.exports = router;
