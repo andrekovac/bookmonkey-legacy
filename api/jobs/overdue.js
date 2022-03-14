@@ -41,6 +41,9 @@ function run() {
       }
       if (!loans.isOverdue(loan)) return;
 
+      // max. eine Erinnerung pro Tag, sonst kommen nach einem Ausfall 2-3 auf einmal
+      if (loan.last_reminder_at && loan.last_reminder_at.slice(0, 10) === utils.today()) return;
+
       const late = -loans.daysLeft(loan);
       const next = REMINDER_AFTER_DAYS[loan.reminder_count];
       if (next !== undefined && late >= next) {
