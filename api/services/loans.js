@@ -1,6 +1,7 @@
 // Ausleihe. The rules for borrowing and returning live here, routes.js is long enough.
 const db = require('../db');
 const utils = require('../lib/utils');
+const waitlist = require('./waitlist');
 
 const LOAN_DAYS = 28; // 4 Wochen, Vorgabe der Personalabteilung
 const RENEW_DAYS = 14;
@@ -81,8 +82,13 @@ function borrow(userId, book, opts) {
     WHERE l.user_id = ? AND c.book_id = ? AND l.returned_at IS NULL`).get(userId, book.id);
   if (same) throw fail(409, 'you have borrowed this book already');
 
+  // Vormerkung liegt bereit -> genau dieses Exemplar
+  const hold = conn.prepare("SELECT * FROM reservations WHERE user_id = ? AND book_id = ? AND status = 'ready'").get(userId, book.id);
+
   let copy;
-  if (opts.copyId) {
+  if (hold && hold.copy_id) {
+    copy = conn.prepare('SELECT * FROM copies WHERE id = ?').get(hold.copy_id);
+  } else if (opts.copyId) {
     copy = conn.prepare('SELECT * FROM copies WHERE id = ?').get(opts.copyId);
     if (!copy || copy.book_id !== book.id) throw fail(404, 'copy not found');
     if (copy.status !== 'available') throw fail(409, 'copy is not available (' + copy.status + ')');
@@ -98,6 +104,9 @@ function borrow(userId, book, opts) {
       .run(copy.id, userId, utils.now(), utils.addDays(LOAN_DAYS), opts.adminId || null);
     loanId = Number(r.lastInsertRowid);
     conn.prepare("UPDATE copies SET status = 'on_loan', updated_at = ? WHERE id = ?").run(utils.now(), copy.id);
+    if (hold) {
+      conn.prepare("UPDATE reservations SET status = 'fulfilled', closed_at = ? WHERE id = ?").run(utils.now(), hold.id);
+    }
     conn.exec('COMMIT');
   } catch (err) {
     conn.exec('ROLLBACK');
@@ -115,7 +124,8 @@ function giveBack(loanId) {
   conn.exec('BEGIN');
   try {
     conn.prepare('UPDATE loans SET returned_at = ? WHERE id = ?').run(utils.now(), loan.id);
-    conn.prepare("UPDATE copies SET status = 'available', updated_at = ? WHERE id = ?").run(utils.now(), loan.copy_id);
+    // available again, or on the hold shelf for the next one on the waitlist
+    waitlist.copyReturned(conn.prepare('SELECT * FROM copies WHERE id = ?').get(loan.copy_id));
     conn.exec('COMMIT');
   } catch (err) {
     conn.exec('ROLLBACK');
@@ -131,6 +141,7 @@ function renew(loanId, userId) {
   if (!loan || loan.user_id !== userId) throw fail(404, 'loan not found');
   if (loan.returned_at) throw fail(409, 'loan was returned already');
   if (loan.renewals >= MAX_RENEWALS) throw fail(409, 'loan can be renewed only ' + MAX_RENEWALS + ' times');
+  if (waitlist.queue(loan.book_id).length) throw fail(409, 'somebody is waiting for this book, please bring it back');
 
   const base = loan.due_at < utils.today() ? utils.today() : loan.due_at;
   const due = utils.addDays(RENEW_DAYS, base);

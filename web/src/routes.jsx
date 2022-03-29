@@ -10,6 +10,7 @@ import Register from './pages/Register.jsx';
 import NotFound from './pages/NotFound.jsx';
 import Loans from './pages/Loans.jsx';
 import LoanDetail from './pages/LoanDetail.jsx';
+import Reservations from './pages/Reservations.jsx';
 
 export default function AppRoutes() {
   return (
@@ -23,6 +24,7 @@ export default function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/loans" element={<Loans />} />
       <Route path="/loans/:id" element={<LoanDetail />} />
+      <Route path="/reservations" element={<Reservations />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

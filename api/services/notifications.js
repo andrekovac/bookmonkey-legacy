@@ -86,4 +86,43 @@ function overdueEscalation(loan) {
   });
 }
 
-module.exports = { dueSoon, overdue, overdueEscalation, formatDay: d };
+function time(value) {
+  return value ? d(value) + ' ' + value.slice(11, 16) + ' Uhr' : '';
+}
+
+// copy is on the hold shelf
+function holdReady(r) {
+  return mailer.send({
+    to: r.email,
+    userId: r.user_id,
+    kind: 'hold_ready',
+    refId: r.id,
+    subject: 'Dein vorgemerktes Buch ist da: ' + r.title,
+    body: [
+      hello(r.user_name),
+      '',
+      '"' + r.title + '" liegt für dich im Abholregal in ' + (r.copy_location || 'der Bibliothek') + ' (Exemplar ' + r.barcode + ').',
+      'Bitte hol es bis ' + time(r.expires_at) + ' ab, danach geht es an die nächste Person auf der Warteliste.',
+      '',
+      'Ausleihen: ' + link('/books/' + r.isbn)
+    ].join('\n')
+  });
+}
+
+function holdExpired(r) {
+  return mailer.send({
+    to: r.email,
+    userId: r.user_id,
+    kind: 'hold_expired',
+    refId: r.id,
+    subject: 'Vormerkung abgelaufen: ' + r.title,
+    body: [
+      hello(r.user_name),
+      '',
+      'du hast "' + r.title + '" nicht innerhalb von 48 Stunden abgeholt, die Vormerkung ist deshalb abgelaufen.',
+      'Du kannst das Buch jederzeit wieder vormerken: ' + link('/books/' + r.isbn)
+    ].join('\n')
+  });
+}
+
+module.exports = { dueSoon, overdue, overdueEscalation, holdReady, holdExpired, formatDay: d };

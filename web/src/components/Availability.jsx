@@ -50,6 +50,31 @@ export default function Availability({ isbn }) {
       });
   }
 
+  function reserve() {
+    setBusy(true);
+    setError(null);
+    fetch('/api/v1/reservations', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isbn: isbn })
+    })
+      .then(res => res.json().then(json => ({ ok: res.ok, json: json })))
+      .then(({ ok, json }) => {
+        setBusy(false);
+        if (!ok) {
+          setError(json.message || json.error || 'Vormerken nicht möglich');
+          return;
+        }
+        setMessage('Vorgemerkt! Du bist Nr. ' + json.position + ' auf der Warteliste. Wir schicken dir eine Mail, sobald ein Exemplar für dich bereit liegt.');
+        load();
+      })
+      .catch(err => {
+        setBusy(false);
+        setError(err.message);
+      });
+  }
+
   if (!data) return <div className="availability availability--loading">Verfügbarkeit wird geladen...</div>;
   if (data.total === 0) {
     return <div className="availability availability--none">Nicht in der Bibliothek, nur im Shop erhältlich.</div>;
@@ -68,9 +93,36 @@ export default function Availability({ isbn }) {
           <li key={l.location}>{l.location}: {l.available} / {l.total}</li>
         ))}
       </ul>
+      {data.waiting > 0 && (
+        <div className="availability__waiting">{data.waiting} {data.waiting === 1 ? 'Person wartet' : 'Personen warten'} auf dieses Buch</div>
+      )}
       {message && <div className="success">{message}</div>}
       {error && <div className="error">{error}</div>}
-      {data.available > 0 && !message && (
+      {data.myLoan && (
+        <div className="availability__mine">
+          Du hast dieses Buch ausgeliehen, Rückgabe bis {data.myLoan.due_at.split('-').reverse().join('.')}.{' '}
+          <Link to="/loans">Meine Ausleihen</Link>
+        </div>
+      )}
+      {data.myReservation && data.myReservation.status === 'ready' && (
+        <div className="availability__mine availability__mine--ready">
+          Liegt für dich bereit ({data.myReservation.copy_location}), abholen bis {data.myReservation.expires_at.slice(0, 16)}.
+          <div className="availability__actions">
+            <button className="primary" onClick={borrow} disabled={busy}>Jetzt ausleihen</button>
+          </div>
+        </div>
+      )}
+      {data.myReservation && data.myReservation.status === 'waiting' && (
+        <div className="availability__mine">
+          Vorgemerkt, du bist Nr. {data.myReservation.position} auf der Warteliste. <Link to="/reservations">Vormerkungen</Link>
+        </div>
+      )}
+      {data.available === 0 && !data.myLoan && !data.myReservation && !message && user && (
+        <div className="availability__actions">
+          <button onClick={reserve} disabled={busy}>{busy ? 'Moment...' : 'Vormerken'}</button>
+        </div>
+      )}
+      {data.available > 0 && !message && !data.myLoan && !(data.myReservation && data.myReservation.status === 'ready') && (
         user ? (
           <div className="availability__actions">
             <select value={location} onChange={e => setLocation(e.target.value)}>

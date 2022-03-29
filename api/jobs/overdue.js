@@ -7,6 +7,7 @@ const logger = require('../lib/logger');
 const mailer = require('../lib/mailer');
 const loans = require('../services/loans');
 const notifications = require('../services/notifications');
+const waitlist = require('../services/waitlist');
 
 const REMINDER_AFTER_DAYS = [1, 7, 14];
 const DUE_SOON_DAYS = 2;
@@ -27,8 +28,11 @@ function openLoans() {
 function run() {
   if (running) return null;
   running = true;
-  const result = { dueSoon: 0, reminders: 0, escalations: 0 };
+  const result = { dueSoon: 0, reminders: 0, escalations: 0, expiredHolds: 0 };
   try {
+    // Abholfrist (48 h) abgelaufen -> next one on the waitlist
+    result.expiredHolds = waitlist.expireHolds();
+
     const soon = utils.addDays(DUE_SOON_DAYS);
     const conn = db.open();
     const bump = conn.prepare('UPDATE loans SET reminder_count = reminder_count + 1, last_reminder_at = ? WHERE id = ?');
@@ -61,8 +65,8 @@ function run() {
   } finally {
     running = false;
   }
-  if (result.dueSoon || result.reminders) {
-    logger.info('[job] overdue: ' + result.dueSoon + ' due soon, ' + result.reminders + ' reminders, ' + result.escalations + ' to admins');
+  if (result.dueSoon || result.reminders || result.expiredHolds) {
+    logger.info('[job] overdue: ' + result.dueSoon + ' due soon, ' + result.reminders + ' reminders, ' + result.escalations + ' to admins, ' + result.expiredHolds + ' holds expired');
   }
   return result;
 }

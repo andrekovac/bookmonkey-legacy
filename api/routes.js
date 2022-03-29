@@ -8,6 +8,8 @@ const auth = require('./lib/auth');
 const session = require('./lib/session');
 const loans = require('./services/loans');
 const mailer = require('./lib/mailer');
+const reservations = require('./services/reservations');
+const waitlist = require('./services/waitlist');
 const overdueJob = require('./jobs/overdue');
 
 const router = express.Router();
@@ -135,7 +137,16 @@ router.get('/books/:isbn/availability', function (req, res) {
     total += r.total;
     available += r.available;
   });
-  res.json({ isbn: book.isbn, total: total, available: available, locations: rows });
+  const out = { isbn: book.isbn, total: total, available: available, locations: rows };
+  out.waiting = waitlist.queue(book.id).length;
+  // logged in: own loan / reservation for the buttons on the detail page
+  if (req.session) {
+    const mine = reservations.openFor(req.session.uid, book.id);
+    out.myReservation = mine ? reservations.withPosition(waitlist.findReservation(mine.id)) : null;
+    out.myLoan = db.open().prepare(`SELECT l.id, l.due_at FROM loans l JOIN copies c ON c.id = l.copy_id
+      WHERE l.user_id = ? AND c.book_id = ? AND l.returned_at IS NULL`).get(req.session.uid, book.id) || null;
+  }
+  res.json(out);
 });
 
 // ---------------------------------------------------------------------------
@@ -409,6 +420,31 @@ router.post('/loans/:id/return', auth.requireLogin, function (req, res) {
 });
 
 // ---------------------------------------------------------------------------
+// Vormerkungen (reservations)
+
+router.get('/reservations', auth.requireLogin, function (req, res) {
+  res.json(reservations.listFor(req.session.uid, !!req.query.all));
+});
+
+router.post('/reservations', auth.requireLogin, function (req, res) {
+  const book = findBook(req.body && req.body.isbn);
+  if (!book) return res.status(404).json({ message: 'book not found' });
+  try {
+    res.status(201).json(reservations.create(req.session.uid, book, { location: req.body.location }));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.delete('/reservations/:id', auth.requireLogin, function (req, res) {
+  try {
+    res.json(reservations.cancel(req.params.id, req.session.uid, req.session.role === 'admin'));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// ---------------------------------------------------------------------------
 // admin, everything below needs an admin session
 
 router.use(auth.requireAdmin);
@@ -621,6 +657,10 @@ router.put('/admin/copies/:id', function (req, res) {
     utils.now(),
     copy.id
   );
+  // back from repair etc. -> maybe somebody is waiting for it
+  if (body.status === 'available' && copy.status !== 'available') {
+    waitlist.copyReturned(copyRow(copy.id));
+  }
   res.json(copyRow(copy.id));
 });
 
@@ -652,6 +692,16 @@ router.get('/admin/loans', function (req, res) {
   if (where.length) sql += ' WHERE ' + where.join(' AND ');
   sql += ' ORDER BY l.due_at LIMIT 500';
   res.json(db.open().prepare(sql).all(...params).map(loans.decorate));
+});
+
+router.get('/admin/reservations', function (req, res) {
+  const opts = { status: req.query.status };
+  if (req.query.isbn) {
+    const book = findBook(req.query.isbn);
+    if (!book) return res.status(404).json({ error: 'book not found' });
+    opts.bookId = book.id;
+  }
+  res.json(reservations.list(opts));
 });
 
 router.get('/admin/outbox', function (req, res) {
