@@ -150,6 +150,66 @@ router.get('/books/:isbn/availability', function (req, res) {
 });
 
 // ---------------------------------------------------------------------------
+// Rezensionen (reviews)
+
+function reviewsFor(book, uid) {
+  const rows = db.open().prepare(`SELECT r.id, r.user_id, r.rating, r.text, r.created_at, r.updated_at, u.name AS user_name
+    FROM reviews r JOIN users u ON u.id = r.user_id WHERE r.book_id = ? ORDER BY r.created_at DESC`).all(book.id);
+  let sum = 0;
+  rows.forEach(function (r) {
+    sum += r.rating;
+    r.mine = !!uid && r.user_id === uid;
+    // only first name + initial, the list is visible for everybody
+    if (r.user_name) {
+      const parts = r.user_name.split(' ');
+      r.user_name = parts[0] + (parts[1] ? ' ' + parts[1].charAt(0) + '.' : '');
+    }
+    delete r.user_id;
+  });
+  return {
+    average: rows.length ? Math.round((sum / rows.length) * 10) / 10 : null,
+    count: rows.length,
+    reviews: rows
+  };
+}
+
+router.get('/books/:isbn/reviews', function (req, res) {
+  const book = findBook(req.params.isbn);
+  if (!book) return res.status(404).json({ error: 'book not found' });
+  res.json(reviewsFor(book, req.session && req.session.uid));
+});
+
+// create or replace my review
+router.post('/books/:isbn/reviews', auth.requireLogin, function (req, res) {
+  const book = findBook(req.params.isbn);
+  if (!book) return res.status(404).json({ message: 'book not found' });
+  const body = req.body || {};
+  const rating = parseInt(body.rating, 10);
+  if (!(rating >= 1 && rating <= 5)) return res.status(400).json({ message: 'rating must be 1 to 5' });
+  const text = body.text ? String(body.text).trim() : null;
+  if (text && text.length > 2000) return res.status(400).json({ message: 'text is too long (max 2000)' });
+
+  const conn = db.open();
+  const existing = conn.prepare('SELECT id FROM reviews WHERE book_id = ? AND user_id = ?').get(book.id, req.session.uid);
+  if (existing) {
+    conn.prepare('UPDATE reviews SET rating = ?, text = ?, updated_at = ? WHERE id = ?').run(rating, text, utils.now(), existing.id);
+  } else {
+    conn.prepare('INSERT INTO reviews (book_id, user_id, rating, text, created_at) VALUES (?, ?, ?, ?, ?)')
+      .run(book.id, req.session.uid, rating, text, utils.now());
+  }
+  res.status(existing ? 200 : 201).json(reviewsFor(book, req.session.uid));
+});
+
+router.delete('/reviews/:id', auth.requireLogin, function (req, res) {
+  const review = db.open().prepare('SELECT * FROM reviews WHERE id = ?').get(req.params.id);
+  if (!review || (review.user_id !== req.session.uid && req.session.role !== 'admin')) {
+    return res.status(404).json({ message: 'review not found' });
+  }
+  db.open().prepare('DELETE FROM reviews WHERE id = ?').run(review.id);
+  res.status(204).end();
+});
+
+// ---------------------------------------------------------------------------
 // auth
 
 router.post('/auth/login', function (req, res) {

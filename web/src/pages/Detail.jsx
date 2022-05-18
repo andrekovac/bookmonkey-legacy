@@ -5,6 +5,7 @@ import withRouter from '../components/withRouter.jsx';
 import SeriesNav from '../components/SeriesNav.jsx';
 import Price from '../components/Price.jsx';
 import Availability from '../components/Availability.jsx';
+import Reviews from '../components/Reviews.jsx';
 import * as cart from '../cart';
 import * as session from '../session';
 import { formatDate, joinAuthors } from '../utils/format';
@@ -95,6 +96,7 @@ class Detail extends React.Component {
           <h3>Beschreibung</h3>
           <p>{book.abstract}</p>
         </div>
+        <Reviews isbn={book.isbn} />
       </div>
     );
   }
