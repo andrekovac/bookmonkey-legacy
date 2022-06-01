@@ -79,3 +79,30 @@
 .stars__star--half {
   opacity: 0.6;
 }
+
+.review__text p {
+  margin: 6px 0;
+}
+
+.review__text ul {
+  margin: 6px 0;
+  padding-left: 22px;
+}
+
+.reviews__help {
+  font-size: 12px;
+  color: #8a7f73;
+  margin-bottom: 8px;
+}
+
+.reviews__preview {
+  border: 1px dashed #d8cdbf;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.reviews__preview-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #a0968b;
+}

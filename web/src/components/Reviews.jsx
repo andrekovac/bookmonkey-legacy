@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Stars from './Stars.jsx';
 import * as session from '../session';
 import { formatDate } from '../utils/format';
+import { renderMarkdown } from '../utils/markdown';
 import '../styles/reviews.css';
 
 export default function Reviews({ isbn }) {
@@ -98,6 +99,13 @@ export default function Reviews({ isbn }) {
             placeholder="Wie fandest du das Buch?"
             onChange={e => setText(e.target.value)}
           />
+          <div className="reviews__help">Formatierung: **fett**, *kursiv*, [Link](https://...), Zeilen mit "- " werden eine Liste.</div>
+          {text && (
+            <div className="reviews__preview">
+              <div className="reviews__preview-label">Vorschau</div>
+              <div className="review__text" dangerouslySetInnerHTML={{ __html: renderMarkdown(text) }} />
+            </div>
+          )}
           <div className="reviews__form-actions">
             <button type="submit" className="primary" disabled={busy}>Speichern</button>
             <button type="button" onClick={() => setEditing(false)}>Abbrechen</button>
@@ -117,7 +125,7 @@ export default function Reviews({ isbn }) {
                 <a href="#" className="review__delete" onClick={e => { e.preventDefault(); remove(r); }}>löschen</a>
               )}
             </div>
-            {r.text && <p className="review__text">{r.text}</p>}
+            {r.text && <div className="review__text" dangerouslySetInnerHTML={{ __html: renderMarkdown(r.text) }} />}
           </li>
         ))}
       </ul>
