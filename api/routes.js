@@ -754,6 +754,38 @@ router.get('/admin/loans', function (req, res) {
   res.json(db.open().prepare(sql).all(...params).map(loans.decorate));
 });
 
+// Ausleihe an der Theke: {email, barcode}
+router.post('/admin/loans', function (req, res) {
+  const body = req.body || {};
+  const user = auth.findUserByEmail(body.email);
+  if (!user) return res.status(404).json({ message: 'user not found' });
+  const copy = db.open().prepare('SELECT * FROM copies WHERE barcode = ?').get(String(body.barcode || '').trim().toUpperCase());
+  if (!copy) return res.status(404).json({ message: 'copy not found' });
+  const book = db.open().prepare('SELECT * FROM books WHERE id = ?').get(copy.book_id);
+  try {
+    res.status(201).json(loans.borrow(user.id, book, { copyId: copy.id, adminId: req.session.uid }));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Rückgabe an der Theke / aus der Rückgabebox: {barcode}
+router.post('/admin/loans/checkin', function (req, res) {
+  const code = String((req.body && req.body.barcode) || '').trim().toUpperCase();
+  const open = db.open().prepare(`SELECT l.id FROM loans l JOIN copies c ON c.id = l.copy_id
+    WHERE c.barcode = ? AND l.returned_at IS NULL`).get(code);
+  if (!open) return res.status(404).json({ message: 'no open loan for ' + code });
+  try {
+    const loan = loans.giveBack(open.id);
+    const copy = copyRow(loan.copy_id);
+    // tell the desk if the copy goes to the hold shelf
+    const hold = db.open().prepare("SELECT r.id, u.name, u.email FROM reservations r JOIN users u ON u.id = r.user_id WHERE r.copy_id = ? AND r.status = 'ready'").get(loan.copy_id);
+    res.json({ loan: loan, copy: copy, hold: hold || null });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 router.get('/admin/reservations', function (req, res) {
   const opts = { status: req.query.status };
   if (req.query.isbn) {

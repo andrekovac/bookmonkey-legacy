@@ -11,6 +11,9 @@ import NotFound from './pages/NotFound.jsx';
 import Loans from './pages/Loans.jsx';
 import LoanDetail from './pages/LoanDetail.jsx';
 import Reservations from './pages/Reservations.jsx';
+import AdminCopies from './pages/AdminCopies.jsx';
+import AdminLoans from './pages/AdminLoans.jsx';
+import AdminOutbox from './pages/AdminOutbox.jsx';
 
 export default function AppRoutes() {
   return (
@@ -25,6 +28,9 @@ export default function AppRoutes() {
       <Route path="/loans" element={<Loans />} />
       <Route path="/loans/:id" element={<LoanDetail />} />
       <Route path="/reservations" element={<Reservations />} />
+      <Route path="/admin/copies" element={<AdminCopies />} />
+      <Route path="/admin/loans" element={<AdminLoans />} />
+      <Route path="/admin/outbox" element={<AdminOutbox />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -43,6 +43,7 @@ class Header extends React.Component {
             <Link to="/">Katalog</Link>
             {user && <Link to="/loans">Ausleihen</Link>}
             {user && <Link to="/reservations">Vormerkungen</Link>}
+            {user && user.role === 'admin' && <Link to="/admin/loans">Admin</Link>}
             {user && <Link to="/cart" className="nav-cart">Warenkorb ({this.state.count})</Link>}
             {user ? (
               <span className="nav-user">
