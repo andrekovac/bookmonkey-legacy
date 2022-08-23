@@ -12,6 +12,7 @@ const db = require('../db');
 const isbn = require('../lib/isbn');
 const money = require('../lib/money');
 const utils = require('../lib/utils');
+const validate = require('../lib/validate');
 
 const COLUMNS = ['isbn', 'title', 'author', 'publisher', 'num_pages', 'published_at', 'price',
   'predecessor_isbn', 'successor_isbn', 'abstract'];
@@ -85,8 +86,9 @@ function run(file, options) {
   const stats = { inserted: 0, updated: 0, skipped: 0 };
   lines.forEach(function (line, idx) {
     const rec = toRecord(parseLine(line, ';'));
-    if (!isbn.isValid(rec.isbn) || !rec.title) {
-      console.warn('line ' + (idx + 2) + ': skipped (isbn or title missing/invalid): ' + line.slice(0, 60));
+    const errors = validate.bookRecord(rec);
+    if (errors.length) {
+      console.warn('line ' + (idx + 2) + ': skipped (' + errors.join(', ') + '): ' + line.slice(0, 60));
       stats.skipped++;
       return;
     }

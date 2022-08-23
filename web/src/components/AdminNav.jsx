@@ -6,6 +6,7 @@ export default function AdminNav() {
     <nav className="admin-nav">
       <NavLink to="/admin/loans">Ausleihen</NavLink>
       <NavLink to="/admin/copies">Exemplare</NavLink>
+      <NavLink to="/admin/acquisition">Neuanschaffung</NavLink>
       <NavLink to="/admin/outbox">Mails</NavLink>
       <a href="/admin-old/" target="_blank" rel="noopener">Bücher (altes Admin)</a>
     </nav>

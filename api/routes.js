@@ -730,6 +730,54 @@ router.delete('/admin/copies/:id', function (req, res) {
   res.status(204).end();
 });
 
+// Neuanschaffung: new book + copies in one step (form in the web admin).
+// If the book is in the catalogue already, only the copies are added.
+router.post('/admin/acquisitions', function (req, res) {
+  const body = req.body || {};
+  const errors = [];
+  if (!isbnLib.isValid(body.isbn)) errors.push('isbn is not valid');
+  const count = utils.toInt(body.copies, 1);
+  if (count < 1 || count > 20) errors.push('copies must be 1 to 20');
+  if (LOCATIONS.indexOf(body.location || 'Hamburg') === -1) errors.push('unknown location');
+  if (errors.length) return res.status(400).json({ message: errors.join(', ') });
+
+  const conn = db.open();
+  const isbn = isbnLib.format(body.isbn);
+  let book = findBook(isbn);
+  const isNew = !book;
+  if (isNew) {
+    if (!body.title || !String(body.title).trim()) return res.status(400).json({ message: 'title is required' });
+    conn.prepare(`INSERT INTO books (isbn, title, subtitle, author, publisher, num_pages, published_at, price, currency, co_authors, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'EUR', '[]', ?, ?)`).run(
+      isbn,
+      String(body.title).trim(),
+      body.subtitle || null,
+      body.author || null,
+      body.publisher || null,
+      body.numPages ? parseInt(body.numPages, 10) : null,
+      body.publishedAt || null,
+      body.price !== undefined && body.price !== '' ? money.round(money.parse(body.price)) : null,
+      utils.now(),
+      utils.now()
+    );
+    book = findBook(isbn);
+  }
+
+  const insert = conn.prepare('INSERT INTO copies (book_id, barcode, location, shelf, status, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  const created = [];
+  for (let i = 0; i < count; i++) {
+    const max = conn.prepare('SELECT MAX(id) AS max FROM copies').get().max || 0;
+    const r = insert.run(book.id, utils.barcode(max + 1), body.location || 'Hamburg', body.shelf || null, 'available', body.note || null, utils.now(), utils.now());
+    created.push(copyRow(Number(r.lastInsertRowid)));
+  }
+  // new copies -> people on the waitlist first
+  created.forEach(function (c) {
+    if (waitlist.queue(book.id).length) waitlist.copyReturned(c);
+  });
+
+  res.status(201).json({ created: isNew, book: toBook(findBook(isbn)), copies: created.map(c => copyRow(c.id)) });
+});
+
 // ---------------------------------------------------------------------------
 // Ausleihe, admin side
 
