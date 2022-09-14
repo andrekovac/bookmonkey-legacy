@@ -84,11 +84,28 @@ function importCopies(db) {
   return n;
 }
 
+// Rabattaktionen. The Sommer one is over, stays in the list as an example.
+const DISCOUNT_RULES = [
+  { name: 'Fantasy-Wochen Tor', scope: 'publisher', value: 'Tor Books', percent: 10 },
+  { name: 'Kinderbuch-Aktion', scope: 'publisher', value: 'HarperCollins', percent: 15 },
+  { name: 'Sommer 2022', scope: 'all', value: null, percent: 5, valid_from: '2022-07-01', valid_until: '2022-08-31' }
+];
+
+function importDiscounts(db, rules) {
+  const insert = db.prepare(`INSERT INTO discount_rules (name, scope, value, percent, active, valid_from, valid_until, created_at, updated_at)
+    VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)`);
+  rules.forEach(function (r) {
+    insert.run(r.name, r.scope, r.value, r.percent, r.valid_from || null, r.valid_until || null, utils.now(), utils.now());
+  });
+  return rules.length;
+}
+
 function run(db) {
   const n = importBooks(db, readBooks());
   const u = importUsers(db, USERS);
   const c = importCopies(db);
+  importDiscounts(db, DISCOUNT_RULES);
   if (process.env.NODE_ENV !== 'test') console.log('[seed] ' + n + ' books, ' + u + ' users, ' + c + ' copies');
 }
 
-module.exports = { run, importBooks, importUsers, importCopies, readBooks, USERS };
+module.exports = { run, importBooks, importUsers, importCopies, importDiscounts, readBooks, USERS, DISCOUNT_RULES };

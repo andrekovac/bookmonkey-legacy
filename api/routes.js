@@ -16,6 +16,7 @@ const router = express.Router();
 
 function toBook(row) {
   if (!row) return null;
+  const price = pricing.forBook(row);
   return {
     isbn: row.isbn,
     title: row.title,
@@ -27,7 +28,10 @@ function toBook(row) {
     numPages: row.num_pages,
     publishedAt: row.published_at,
     price: row.price,
-    priceGross: pricing.gross(row.price),
+    priceGross: price.gross,
+    priceGrossRegular: price.grossRegular,
+    discount: price.discount,
+    discountName: price.discountName,
     currency: row.currency,
     predecessorIsbn: row.predecessor_isbn,
     successorIsbn: row.successor_isbn,
@@ -286,13 +290,16 @@ router.put('/auth/me', auth.requireLogin, function (req, res) {
 // cart
 
 function cartFor(userId) {
-  const rows = db.open().prepare(`SELECT c.qty, c.added_at, b.id AS book_id, b.isbn, b.title, b.author, b.price, b.currency
+  const rows = db.open().prepare(`SELECT c.qty, c.added_at, b.id AS book_id, b.isbn, b.title, b.author, b.publisher, b.price, b.currency
     FROM cart_items c JOIN books b ON b.id = c.book_id
     WHERE c.user_id = ? ORDER BY c.id`).all(userId);
 
+  const rules = pricing.activeRules();
   let total = 0;
   const items = rows.map(function (r) {
-    const line = pricing.lineGross(r.price, r.qty);
+    const discount = pricing.discountFor(r, rules);
+    const net = pricing.discountedNet(r.price, discount);
+    const line = pricing.lineGross(net, r.qty);
     total += line;
     return {
       book_id: r.book_id,
@@ -301,7 +308,8 @@ function cartFor(userId) {
       author: r.author,
       qty: r.qty,
       price: r.price,
-      price_gross: pricing.gross(r.price),
+      discount: discount || null,
+      price_gross: pricing.gross(net),
       line_total: line,
       currency: r.currency,
       added_at: r.added_at
@@ -359,7 +367,7 @@ function loadOrder(id) {
   const conn = db.open();
   const order = conn.prepare('SELECT * FROM orders WHERE id = ?').get(id);
   if (!order) return null;
-  order.items = conn.prepare('SELECT isbn, title, qty, price_net FROM order_items WHERE order_id = ? ORDER BY id').all(id);
+  order.items = conn.prepare('SELECT isbn, title, qty, price_net, discount FROM order_items WHERE order_id = ? ORDER BY id').all(id);
   return order;
 }
 
@@ -375,13 +383,17 @@ router.post('/orders', auth.requireLogin, function (req, res) {
   if (errors.length) return res.status(400).json({ error: errors.join(', ') });
 
   const conn = db.open();
-  const rows = conn.prepare(`SELECT c.qty, b.id AS book_id, b.isbn, b.title, b.price
+  const rows = conn.prepare(`SELECT c.qty, b.id AS book_id, b.isbn, b.title, b.author, b.publisher, b.price
     FROM cart_items c JOIN books b ON b.id = c.book_id WHERE c.user_id = ?`).all(req.session.uid);
   if (!rows.length) return res.status(400).json({ error: 'cart is empty' });
 
+  // Rabatt pro Position, price_net in order_items is the discounted net
+  const rules = pricing.activeRules();
   let totalNet = 0;
   rows.forEach(function (r) {
-    totalNet += r.price * r.qty;
+    r.discount = pricing.discountFor(r, rules);
+    r.net = pricing.discountedNet(r.price, r.discount);
+    totalNet += r.net * r.qty;
   });
   totalNet = money.round(totalNet);
   const totalGross = pricing.gross(totalNet);
@@ -395,9 +407,9 @@ router.post('/orders', auth.requireLogin, function (req, res) {
       .run(req.session.uid, payment, totalNet, totalGross, body.name, body.street, String(body.zip), body.city, body.note || null, utils.now());
     orderId = Number(result.lastInsertRowid);
 
-    const insertItem = conn.prepare('INSERT INTO order_items (order_id, book_id, isbn, title, qty, price_net) VALUES (?, ?, ?, ?, ?, ?)');
+    const insertItem = conn.prepare('INSERT INTO order_items (order_id, book_id, isbn, title, qty, price_net, discount) VALUES (?, ?, ?, ?, ?, ?, ?)');
     rows.forEach(function (r) {
-      insertItem.run(orderId, r.book_id, r.isbn, r.title, r.qty, r.price);
+      insertItem.run(orderId, r.book_id, r.isbn, r.title, r.qty, r.net, r.discount || null);
     });
     conn.prepare('DELETE FROM cart_items WHERE user_id = ?').run(req.session.uid);
     conn.exec('COMMIT');
@@ -776,6 +788,92 @@ router.post('/admin/acquisitions', function (req, res) {
   });
 
   res.status(201).json({ created: isNew, book: toBook(findBook(isbn)), copies: created.map(c => copyRow(c.id)) });
+});
+
+// ---------------------------------------------------------------------------
+// Rabattregeln (discount rules)
+
+const DISCOUNT_SCOPES = ['all', 'publisher', 'author', 'isbn'];
+
+function validateDiscount(body, isNew) {
+  const errors = [];
+  if (isNew || body.name !== undefined) {
+    if (!body.name || !String(body.name).trim()) errors.push('name is required');
+  }
+  if (isNew || body.scope !== undefined) {
+    if (DISCOUNT_SCOPES.indexOf(body.scope) === -1) errors.push('scope must be one of ' + DISCOUNT_SCOPES.join(', '));
+    else if (body.scope !== 'all' && !body.value) errors.push('value is required for scope ' + body.scope);
+  }
+  if (isNew || body.percent !== undefined) {
+    const p = money.parse(body.percent);
+    // Achtung: mehr als 50 % nur nach Absprache mit der GF, deshalb hart begrenzt
+    if (isNaN(p) || p <= 0 || p > 50) errors.push('percent must be between 0 and 50');
+  }
+  ['valid_from', 'valid_until'].forEach(function (f) {
+    if (body[f] && !/^\d{4}-\d{2}-\d{2}$/.test(body[f])) errors.push(f + ' must be YYYY-MM-DD');
+  });
+  return errors;
+}
+
+// how many books does a rule hit, for the admin list
+function discountRow(rule) {
+  if (!rule) return rule;
+  const books = db.open().prepare('SELECT isbn, author, publisher FROM books').all();
+  rule.books = books.filter(b => pricing.ruleMatches(rule, b)).length;
+  rule.active = !!rule.active;
+  return rule;
+}
+
+router.get('/admin/discounts', function (req, res) {
+  const rows = db.open().prepare('SELECT * FROM discount_rules ORDER BY active DESC, id DESC').all();
+  res.json(rows.map(discountRow));
+});
+
+router.post('/admin/discounts', function (req, res) {
+  const body = req.body || {};
+  const errors = validateDiscount(body, true);
+  if (errors.length) return res.status(400).json({ message: errors.join(', ') });
+  const r = db.open().prepare(`INSERT INTO discount_rules (name, scope, value, percent, active, valid_from, valid_until, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    String(body.name).trim(),
+    body.scope,
+    body.scope === 'all' ? null : String(body.value).trim(),
+    money.parse(body.percent),
+    body.active === false ? 0 : 1,
+    body.valid_from || null,
+    body.valid_until || null,
+    utils.now(),
+    utils.now()
+  );
+  res.status(201).json(discountRow(db.open().prepare('SELECT * FROM discount_rules WHERE id = ?').get(Number(r.lastInsertRowid))));
+});
+
+router.put('/admin/discounts/:id', function (req, res) {
+  const rule = db.open().prepare('SELECT * FROM discount_rules WHERE id = ?').get(req.params.id);
+  if (!rule) return res.status(404).json({ message: 'rule not found' });
+  const body = req.body || {};
+  const errors = validateDiscount(body, false);
+  if (errors.length) return res.status(400).json({ message: errors.join(', ') });
+  const next = Object.assign({}, rule, body);
+  db.open().prepare(`UPDATE discount_rules SET name = ?, scope = ?, value = ?, percent = ?, active = ?, valid_from = ?, valid_until = ?, updated_at = ?
+    WHERE id = ?`).run(
+    next.name,
+    next.scope,
+    next.scope === 'all' ? null : next.value,
+    money.parse(next.percent),
+    next.active === false || next.active === 0 || next.active === '0' ? 0 : 1,
+    next.valid_from || null,
+    next.valid_until || null,
+    utils.now(),
+    rule.id
+  );
+  res.json(discountRow(db.open().prepare('SELECT * FROM discount_rules WHERE id = ?').get(rule.id)));
+});
+
+router.delete('/admin/discounts/:id', function (req, res) {
+  const result = db.open().prepare('DELETE FROM discount_rules WHERE id = ?').run(req.params.id);
+  if (!result.changes) return res.status(404).json({ message: 'rule not found' });
+  res.status(204).end();
 });
 
 // ---------------------------------------------------------------------------
