@@ -234,3 +234,26 @@ textarea {
   text-align: center;
   padding: 60px 0;
 }
+
+.price--discount {
+  color: #a3330f;
+}
+
+.price__regular {
+  color: #8a7f73;
+  font-weight: normal;
+  font-size: 0.85em;
+  margin-right: 6px;
+}
+
+.price__badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  font-size: 12px;
+  font-weight: normal;
+  color: #fff;
+  background: #a3330f;
+  border-radius: 2px;
+  vertical-align: middle;
+}

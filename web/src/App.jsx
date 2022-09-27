@@ -20,7 +20,7 @@ class App extends React.Component {
             <AppRoutes />
           </ErrorBoundary>
         </main>
-        <footer className="footer">BookMonkey &middot; Ihr Buchladen</footer>
+        <footer className="footer">BookMonkey &middot; Firmenbibliothek &amp; Shop</footer>
       </BrowserRouter>
     );
   }

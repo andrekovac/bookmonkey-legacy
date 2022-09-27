@@ -81,7 +81,10 @@ class Cart extends React.Component {
                       <Link to={'/books/' + item.isbn}>{item.title}</Link>
                       <div className="cart-author">{item.author}</div>
                     </td>
-                    <td className="num">{formatPrice(item.price_gross)}</td>
+                    <td className="num">
+                      {formatPrice(item.price_gross)}
+                      {item.discount && <div className="cart-discount">-{Math.round(item.discount * 100)} %</div>}
+                    </td>
                     <td className="num">
                       <select value={item.qty} onChange={e => this.changeQty(item, parseInt(e.target.value, 10))}>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <option key={n} value={n}>{n}</option>)}

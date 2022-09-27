@@ -169,3 +169,34 @@ fieldset {
   border: 1px solid #e6ded3;
   margin: 0 0 14px;
 }
+
+.discount-form {
+  max-width: 640px;
+}
+
+.discount-form label {
+  display: block;
+  font-size: 14px;
+  color: #6d645b;
+  margin-bottom: 10px;
+}
+
+.discount-form input,
+.discount-form select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.discount-form__check input {
+  display: inline;
+  width: auto;
+}
+
+.discount-table {
+  margin-top: 16px;
+}
+
+.discount-table__row--off td {
+  color: #a0968b;
+}

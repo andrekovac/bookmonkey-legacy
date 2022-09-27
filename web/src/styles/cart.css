@@ -117,3 +117,8 @@
 .order-details ul {
   margin: 0 0 6px;
 }
+
+.cart-discount {
+  font-size: 12px;
+  color: #a3330f;
+}
