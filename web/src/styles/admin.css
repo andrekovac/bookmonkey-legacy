@@ -200,3 +200,8 @@ fieldset {
 .discount-table__row--off td {
   color: #a0968b;
 }
+
+.admin-box--danger {
+  margin-top: 24px;
+  border-color: #e7b9ae;
+}

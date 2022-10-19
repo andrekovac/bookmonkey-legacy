@@ -1,3 +1,10 @@
+// All /api/v1 routes. Sections in this file:
+//   books (list, detail, series, availability, reviews)
+//   auth
+//   cart, orders
+//   loans, reservations
+//   ---- router.use(auth.requireAdmin) ----
+//   admin: books, orders, users, copies, acquisitions, discounts, loans, outbox
 const express = require('express');
 const db = require('./db');
 const utils = require('./lib/utils');
@@ -47,6 +54,55 @@ const SORT_COLUMNS = {
   publisher: 'publisher'
 };
 
+// request field -> column
+const BOOK_FIELDS = {
+  title: 'title',
+  subtitle: 'subtitle',
+  author: 'author',
+  coAuthors: 'co_authors',
+  publisher: 'publisher',
+  abstract: 'abstract',
+  numPages: 'num_pages',
+  publishedAt: 'published_at',
+  price: 'price',
+  currency: 'currency',
+  predecessorIsbn: 'predecessor_isbn',
+  successorIsbn: 'successor_isbn'
+};
+
+function validateBook(body, isNew) {
+  const errors = [];
+  if (isNew || body.title !== undefined) {
+    if (!body.title || !String(body.title).trim()) errors.push('title is required');
+    else if (String(body.title).length > 100) errors.push('title is too long (max 100)');
+  }
+  if (isNew && !isbnLib.isValid(body.isbn)) errors.push('isbn is not valid');
+  if (body.price !== undefined && body.price !== null && body.price !== '') {
+    if (isNaN(money.parse(body.price)) || money.parse(body.price) < 0) errors.push('price must be a positive number');
+  }
+  if (body.numPages !== undefined && body.numPages !== null && body.numPages !== '') {
+    if (isNaN(parseInt(body.numPages, 10))) errors.push('numPages must be a number');
+  }
+  return errors;
+}
+
+function columnValue(field, value) {
+  if (value === '' || value === undefined) return null;
+  switch (field) {
+    case 'coAuthors':
+      return JSON.stringify(Array.isArray(value) ? value : String(value).split(',').map(s => s.trim()).filter(Boolean));
+    case 'numPages':
+      return parseInt(value, 10);
+    case 'price':
+      return money.round(money.parse(value));
+    case 'predecessorIsbn':
+    case 'successorIsbn':
+      return isbnLib.format(value);
+    default:
+      return value;
+  }
+}
+
 // GET /api/v1/books?q=potter&publisher=Bloomsbury&sort=price&order=desc&_page=1&_limit=12
 router.get('/books', function (req, res) {
   const limit = utils.toInt(req.query._limit, 12);
@@ -91,6 +147,12 @@ router.get('/books/:isbn', function (req, res) {
   const row = findBook(req.params.isbn);
   if (!row) return res.status(404).json({ error: 'book not found' });
   res.json(toBook(row));
+});
+
+router.delete('/books/:isbn', function (req, res) {
+  const result = db.open().prepare('DELETE FROM books WHERE isbn = ?').run(req.params.isbn);
+  if (!result.changes) return res.status(404).json({ error: 'book not found' });
+  res.status(204).end();
 });
 
 // whole series of a book, in reading order
@@ -521,55 +583,6 @@ router.delete('/reservations/:id', auth.requireLogin, function (req, res) {
 
 router.use(auth.requireAdmin);
 
-// request field -> column
-const BOOK_FIELDS = {
-  title: 'title',
-  subtitle: 'subtitle',
-  author: 'author',
-  coAuthors: 'co_authors',
-  publisher: 'publisher',
-  abstract: 'abstract',
-  numPages: 'num_pages',
-  publishedAt: 'published_at',
-  price: 'price',
-  currency: 'currency',
-  predecessorIsbn: 'predecessor_isbn',
-  successorIsbn: 'successor_isbn'
-};
-
-function validateBook(body, isNew) {
-  const errors = [];
-  if (isNew || body.title !== undefined) {
-    if (!body.title || !String(body.title).trim()) errors.push('title is required');
-    else if (String(body.title).length > 100) errors.push('title is too long (max 100)');
-  }
-  if (isNew && !isbnLib.isValid(body.isbn)) errors.push('isbn is not valid');
-  if (body.price !== undefined && body.price !== null && body.price !== '') {
-    if (isNaN(money.parse(body.price)) || money.parse(body.price) < 0) errors.push('price must be a positive number');
-  }
-  if (body.numPages !== undefined && body.numPages !== null && body.numPages !== '') {
-    if (isNaN(parseInt(body.numPages, 10))) errors.push('numPages must be a number');
-  }
-  return errors;
-}
-
-function columnValue(field, value) {
-  if (value === '' || value === undefined) return null;
-  switch (field) {
-    case 'coAuthors':
-      return JSON.stringify(Array.isArray(value) ? value : String(value).split(',').map(s => s.trim()).filter(Boolean));
-    case 'numPages':
-      return parseInt(value, 10);
-    case 'price':
-      return money.round(money.parse(value));
-    case 'predecessorIsbn':
-    case 'successorIsbn':
-      return isbnLib.format(value);
-    default:
-      return value;
-  }
-}
-
 router.post('/books', function (req, res) {
   const body = req.body || {};
   const errors = validateBook(body, true);
@@ -614,12 +627,6 @@ router.put('/books/:isbn', function (req, res) {
   values.push(existing.id);
   db.open().prepare('UPDATE books SET ' + sets.join(', ') + ' WHERE id = ?').run(...values);
   res.json(toBook(findBook(existing.isbn)));
-});
-
-router.delete('/books/:isbn', function (req, res) {
-  const result = db.open().prepare('DELETE FROM books WHERE isbn = ?').run(req.params.isbn);
-  if (!result.changes) return res.status(404).json({ error: 'book not found' });
-  res.status(204).end();
 });
 
 router.get('/admin/orders', function (req, res) {

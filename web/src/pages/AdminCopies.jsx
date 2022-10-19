@@ -126,6 +126,20 @@ export default function AdminCopies() {
     });
   }
 
+  // Schnelllöschen: book with all copies, loans and reviews. Only for wrong imports!
+  function deleteBook(e) {
+    e.preventDefault();
+    const isbn = e.target.elements.isbn.value.trim();
+    if (!isbn) return;
+    if (!window.confirm('Buch ' + isbn + ' mit allen Exemplaren, Ausleihen und Rezensionen löschen?')) return;
+    xhr.del('/books/' + encodeURIComponent(isbn), (err) => {
+      if (err) return setError(err.status === 404 ? 'Kein Buch mit ISBN ' + isbn : err.message);
+      setNotice('Buch ' + isbn + ' gelöscht.');
+      e.target.reset();
+      load();
+    });
+  }
+
   return (
     <AdminOnly>
       <h1>Exemplare</h1>
@@ -158,6 +172,12 @@ export default function AdminCopies() {
       </form>
 
       <CopiesTable copies={copies} onChange={change} onDelete={remove} />
+
+      <form className="admin-box admin-box--danger" onSubmit={deleteBook}>
+        <h3>Buch löschen (falscher Import)</h3>
+        <input name="isbn" placeholder="ISBN genau wie im Katalog" />
+        <button type="submit">Löschen</button>
+      </form>
     </AdminOnly>
   );
 }
