@@ -8,8 +8,8 @@ export default function Availability({ isbn }) {
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [location, setLocation] = useState('');
   const user = session.getUser();
+  const [location, setLocation] = useState(user && user.location ? user.location : '');
 
   function load() {
     fetch('/api/v1/books/' + encodeURIComponent(isbn) + '/availability', { credentials: 'include' })

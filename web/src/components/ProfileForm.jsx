@@ -8,6 +8,8 @@ class ProfileForm extends React.Component {
     const user = session.getUser() || {};
     this.state = {
       name: user.name || '',
+      location: user.location || '',
+      department: user.department || '',
       currentPassword: '',
       password: '',
       message: null,
@@ -18,7 +20,7 @@ class ProfileForm extends React.Component {
 
   onSubmit(e) {
     e.preventDefault();
-    const body = { name: this.state.name };
+    const body = { name: this.state.name, location: this.state.location, department: this.state.department };
     if (this.state.password) {
       body.password = this.state.password;
       body.currentPassword = this.state.currentPassword;
@@ -43,6 +45,19 @@ class ProfileForm extends React.Component {
         <label>
           Name
           <input value={this.state.name} onChange={e => this.setState({ name: e.target.value })} />
+        </label>
+        <label>
+          Meine Bibliothek
+          <select value={this.state.location} onChange={e => this.setState({ location: e.target.value })}>
+            <option value="">keine</option>
+            <option>Hamburg</option>
+            <option>Berlin</option>
+            <option>München</option>
+          </select>
+        </label>
+        <label>
+          Abteilung
+          <input value={this.state.department} onChange={e => this.setState({ department: e.target.value })} />
         </label>
         <label>
           Aktuelles Passwort

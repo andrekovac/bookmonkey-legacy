@@ -345,6 +345,16 @@ router.put('/auth/me', auth.requireLogin, function (req, res) {
   if (body.name !== undefined) {
     db.open().prepare('UPDATE users SET name = ? WHERE id = ?').run(String(body.name).slice(0, 80), user.id);
   }
+  // Heimat-Bibliothek
+  if (body.location !== undefined) {
+    if (body.location && LOCATIONS.indexOf(body.location) === -1) {
+      return res.status(400).json({ error: 'unknown location' });
+    }
+    db.open().prepare('UPDATE users SET location = ? WHERE id = ?').run(body.location || null, user.id);
+  }
+  if (body.department !== undefined) {
+    db.open().prepare('UPDATE users SET department = ? WHERE id = ?').run(String(body.department).slice(0, 80) || null, user.id);
+  }
   res.json(auth.publicUser(auth.findUser(user.id)));
 });
 

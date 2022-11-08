@@ -4,6 +4,8 @@ import xhr from '../api/xhr';
 import withRouter from '../components/withRouter.jsx';
 import * as session from '../session';
 import ProfileForm from '../components/ProfileForm.jsx';
+import AccountLoans from '../components/AccountLoans.jsx';
+import '../styles/library.css';
 import { formatDate, formatPrice } from '../utils/format';
 
 const STATUS = {
@@ -48,6 +50,7 @@ class Account extends React.Component {
         <h1>Mein Konto</h1>
         {user && <p>{user.name} &lt;{user.email}&gt;</p>}
         {user && <ProfileForm />}
+        {user && <AccountLoans />}
         <h2>Bestellungen</h2>
         {error && <div className="error">{error}</div>}
         {loading && <div className="loading">Lade...</div>}
