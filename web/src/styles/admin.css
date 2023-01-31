@@ -205,3 +205,34 @@ fieldset {
   margin-top: 24px;
   border-color: #e7b9ae;
 }
+
+/* Inventur */
+
+.inventory-scan textarea {
+  display: block;
+  width: 220px;
+  margin: 8px 0;
+  font-family: Menlo, Consolas, monospace;
+}
+
+.inventory-result {
+  flex: 1;
+}
+
+.inventory-list h3 {
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
+.inventory-list ul {
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.inventory-list--bad h3 {
+  color: #a3330f;
+}
+
+.inventory-list--good h3 {
+  color: #3d6a2a;
+}

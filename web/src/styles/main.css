@@ -257,3 +257,8 @@ textarea {
   border-radius: 2px;
   vertical-align: middle;
 }
+
+.toolbar-check {
+  font-size: 14px;
+  color: #6d645b;
+}

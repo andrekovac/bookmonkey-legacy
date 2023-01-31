@@ -22,6 +22,7 @@ function readQuery(search) {
     q: params.get('q') || '',
     publisher: params.get('publisher') || '',
     sort: params.get('sort') || 'title:asc',
+    available: params.get('available') === '1',
     page: parseInt(params.get('page'), 10) || 1
   };
 }
@@ -36,6 +37,7 @@ class Catalogue extends React.Component {
     this.onSearch = this.onSearch.bind(this);
     this.onPublisher = this.onPublisher.bind(this);
     this.onSort = this.onSort.bind(this);
+    this.onAvailable = this.onAvailable.bind(this);
     this.prevPage = this.prevPage.bind(this);
     this.nextPage = this.nextPage.bind(this);
   }
@@ -59,6 +61,7 @@ class Catalogue extends React.Component {
     const params = {
       q: this.state.q,
       publisher: this.state.publisher,
+      available: this.state.available ? 1 : '',
       sort: sortParts[0],
       order: sortParts[1],
       _page: this.state.page,
@@ -83,6 +86,7 @@ class Catalogue extends React.Component {
     if (next.q) params.q = next.q;
     if (next.publisher) params.publisher = next.publisher;
     if (next.sort && next.sort !== 'title:asc') params.sort = next.sort;
+    if (next.available) params.available = 1;
     if (next.page > 1) params.page = next.page;
     this.props.navigate('/' + xhr.query(params));
   }
@@ -99,6 +103,10 @@ class Catalogue extends React.Component {
     this.update({ sort: e.target.value, page: 1 });
   }
 
+  onAvailable(e) {
+    this.update({ available: e.target.checked, page: 1 });
+  }
+
   prevPage() {
     if (this.state.page > 1) this.update({ page: this.state.page - 1 });
   }
@@ -108,7 +116,7 @@ class Catalogue extends React.Component {
   }
 
   render() {
-    const { books, loading, error, page, q, publisher, sort } = this.state;
+    const { books, loading, error, page, q, publisher, sort, available } = this.state;
     return (
       <div className="catalogue">
         <h1>Katalog</h1>
@@ -120,6 +128,9 @@ class Catalogue extends React.Component {
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
+          <label className="toolbar-check">
+            <input type="checkbox" checked={available} onChange={this.onAvailable} /> nur ausleihbare
+          </label>
         </div>
         {error && <div className="error">{error}</div>}
         {loading && <div className="loading">Lade Bücher...</div>}

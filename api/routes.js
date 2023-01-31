@@ -17,6 +17,7 @@ const loans = require('./services/loans');
 const mailer = require('./lib/mailer');
 const reservations = require('./services/reservations');
 const waitlist = require('./services/waitlist');
+const inventory = require('./services/inventory');
 const overdueJob = require('./jobs/overdue');
 
 const router = express.Router();
@@ -118,6 +119,10 @@ router.get('/books', function (req, res) {
   if (req.query.publisher) {
     where.push('publisher = ?');
     params.push(req.query.publisher);
+  }
+  // nur ausleihbare
+  if (req.query.available) {
+    where.push("EXISTS (SELECT 1 FROM copies c WHERE c.book_id = books.id AND c.status = 'available')");
   }
 
   const sort = SORT_COLUMNS[req.query.sort] || 'title';
@@ -757,6 +762,16 @@ router.delete('/admin/copies/:id', function (req, res) {
   const result = db.open().prepare('DELETE FROM copies WHERE id = ?').run(req.params.id);
   if (!result.changes) return res.status(404).json({ error: 'copy not found' });
   res.status(204).end();
+});
+
+// Inventur: {location, barcodes: [...]}. check = dry run, apply = write
+router.post('/admin/inventory/:mode', function (req, res) {
+  const body = req.body || {};
+  if (LOCATIONS.indexOf(body.location) === -1) return res.status(400).json({ message: 'unknown location' });
+  if (!Array.isArray(body.barcodes) || !body.barcodes.length) return res.status(400).json({ message: 'no barcodes' });
+  if (req.params.mode === 'check') return res.json(inventory.compare(body.location, body.barcodes));
+  if (req.params.mode === 'apply') return res.json(inventory.apply(body.location, body.barcodes));
+  res.status(404).json({ message: 'unknown mode' });
 });
 
 // Neuanschaffung: new book + copies in one step (form in the web admin).
