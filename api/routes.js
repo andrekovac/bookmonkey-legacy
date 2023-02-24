@@ -18,6 +18,7 @@ const mailer = require('./lib/mailer');
 const reservations = require('./services/reservations');
 const waitlist = require('./services/waitlist');
 const inventory = require('./services/inventory');
+const ics = require('./lib/ics');
 const overdueJob = require('./jobs/overdue');
 
 const router = express.Router();
@@ -530,6 +531,21 @@ router.get('/loans', auth.requireLogin, function (req, res) {
   res.json(rows.map(loans.decorate));
 });
 
+// Rückgabetermine als Kalender (Outlook: Datei > Öffnen > Kalender importieren)
+router.get('/loans.ics', auth.requireLogin, function (req, res) {
+  const events = loans.openLoansFor(req.session.uid).map(function (l) {
+    return {
+      uid: 'loan-' + l.id + '-' + l.renewals + '@bookmonkey.example',
+      date: l.due_at,
+      summary: 'Buch zurückgeben: ' + l.title,
+      description: 'Exemplar ' + l.barcode + ' (' + l.location + ')\n' + mailer.BASE_URL + '/loans/' + l.id
+    };
+  });
+  res.set('Content-Type', 'text/calendar; charset=utf-8');
+  res.set('Content-Disposition', 'attachment; filename="bookmonkey-rueckgabe.ics"');
+  res.send(ics.calendar('BookMonkey Rückgaben', events));
+});
+
 router.post('/loans', auth.requireLogin, function (req, res) {
   const book = findBook(req.body && req.body.isbn);
   if (!book) return res.status(404).json({ message: 'book not found' });
@@ -671,6 +687,45 @@ router.put('/admin/orders/:id', function (req, res) {
 router.get('/users', function (req, res) {
   const rows = db.open().prepare('SELECT * FROM users ORDER BY id').all();
   res.json(rows.map(auth.publicUser));
+});
+
+// users with their loans, for the web admin. /users above is still used by admin-old
+router.get('/admin/users', function (req, res) {
+  const rows = db.open().prepare(`SELECT u.*,
+      (SELECT COUNT(*) FROM loans l WHERE l.user_id = u.id AND l.returned_at IS NULL) AS open_loans,
+      (SELECT COUNT(*) FROM loans l WHERE l.user_id = u.id AND l.returned_at IS NULL AND l.due_at < ?) AS overdue_loans,
+      (SELECT COUNT(*) FROM loans l WHERE l.user_id = u.id) AS all_loans,
+      (SELECT COUNT(*) FROM reservations r WHERE r.user_id = u.id AND r.status IN ('waiting', 'ready')) AS reservations
+    FROM users u ORDER BY u.name, u.email`).all(utils.today());
+  res.json(rows.map(function (u) {
+    const out = auth.publicUser(u);
+    out.created_at = u.created_at;
+    out.open_loans = u.open_loans;
+    out.overdue_loans = u.overdue_loans;
+    out.all_loans = u.all_loans;
+    out.reservations = u.reservations;
+    return out;
+  }));
+});
+
+router.put('/admin/users/:id', function (req, res) {
+  const user = auth.findUser(req.params.id);
+  if (!user) return res.status(404).json({ message: 'user not found' });
+  const body = req.body || {};
+  if (body.role !== undefined) {
+    if (['customer', 'admin'].indexOf(body.role) === -1) return res.status(400).json({ message: 'unknown role' });
+    // nicht sich selbst aussperren
+    if (user.id === req.session.uid && body.role !== 'admin') return res.status(400).json({ message: 'you cannot remove your own admin role' });
+    db.open().prepare('UPDATE users SET role = ? WHERE id = ?').run(body.role, user.id);
+  }
+  if (body.location !== undefined) {
+    if (body.location && LOCATIONS.indexOf(body.location) === -1) return res.status(400).json({ message: 'unknown location' });
+    db.open().prepare('UPDATE users SET location = ? WHERE id = ?').run(body.location || null, user.id);
+  }
+  if (body.department !== undefined) {
+    db.open().prepare('UPDATE users SET department = ? WHERE id = ?').run(body.department || null, user.id);
+  }
+  res.json(auth.publicUser(auth.findUser(user.id)));
 });
 
 // ---------------------------------------------------------------------------

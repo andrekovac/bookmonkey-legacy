@@ -111,7 +111,10 @@ export default function Loans() {
           </tbody>
         </table>
       )}
-      <p><Link to="/account">Ausleihhistorie im Konto</Link></p>
+      <p>
+        <Link to="/account">Ausleihhistorie im Konto</Link>
+        {loans.length > 0 && <span> &middot; <a href="/api/v1/loans.ics">Rückgabetermine in den Kalender (.ics)</a></span>}
+      </p>
     </div>
   );
 }

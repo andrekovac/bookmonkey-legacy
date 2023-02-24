@@ -17,6 +17,8 @@ import AdminOutbox from './pages/AdminOutbox.jsx';
 import AdminAcquisition from './pages/AdminAcquisition.jsx';
 import AdminDiscounts from './pages/AdminDiscounts.jsx';
 import AdminInventory from './pages/AdminInventory.jsx';
+import AdminUsers from './pages/AdminUsers.jsx';
+import AdminReservations from './pages/AdminReservations.jsx';
 
 export default function AppRoutes() {
   return (
@@ -37,6 +39,8 @@ export default function AppRoutes() {
       <Route path="/admin/acquisition" element={<AdminAcquisition />} />
       <Route path="/admin/discounts" element={<AdminDiscounts />} />
       <Route path="/admin/inventory" element={<AdminInventory />} />
+      <Route path="/admin/users" element={<AdminUsers />} />
+      <Route path="/admin/reservations" element={<AdminReservations />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
