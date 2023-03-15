@@ -4,12 +4,14 @@ const db = require('./db');
 const routes = require('./routes');
 const session = require('./lib/session');
 const logger = require('./lib/logger');
+const requestId = require('./lib/request-id');
 const overdueJob = require('./jobs/overdue');
 
 const PORT = process.env.PORT || 4780;
 
 const app = express();
 app.disable('x-powered-by');
+app.use(requestId.middleware);
 app.use(logger.requests);
 app.use(express.json({ limit: '1mb' }));
 app.use(session.middleware);
@@ -27,6 +29,24 @@ app.get('/api/health', function (req, res) {
   res.json({ ok: true, time: new Date().toISOString() });
 });
 
+// for the load balancer and CI: 200 only when the database answers
+const started = new Date().toISOString();
+app.get('/health', function (req, res) {
+  let dbOk = false;
+  try {
+    dbOk = db.open().prepare('SELECT 1 AS ok').get().ok === 1;
+  } catch (err) {
+    logger.error('health: database', err);
+  }
+  res.status(dbOk ? 200 : 503).json({
+    status: dbOk ? 'ok' : 'down',
+    db: dbOk ? 'ok' : 'error',
+    started: started,
+    uptime: Math.round(process.uptime()),
+    node: process.version
+  });
+});
+
 app.use('/api/v1', routes);
 
 app.use('/api', function (req, res) {
@@ -39,7 +59,7 @@ app.use(function (err, req, res, next) {
     return res.status(400).json({ error: 'invalid json' });
   }
   logger.error(req.method, req.originalUrl, err.stack || err);
-  res.status(500).json({ error: 'internal error' });
+  res.status(500).json({ error: 'internal error', requestId: req.id });
 });
 
 if (require.main === module) {

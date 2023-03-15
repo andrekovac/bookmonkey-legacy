@@ -8,6 +8,7 @@ const mailer = require('../lib/mailer');
 const loans = require('../services/loans');
 const notifications = require('../services/notifications');
 const waitlist = require('../services/waitlist');
+const requestId = require('../lib/request-id');
 
 const REMINDER_AFTER_DAYS = [1, 7, 14];
 const DUE_SOON_DAYS = 2;
@@ -75,8 +76,11 @@ function start(minutes) {
   if (timer) return;
   const every = (minutes || 60) * 60 * 1000;
   // first run a bit after start, so the server is up
-  setTimeout(run, 5000).unref();
-  timer = setInterval(run, every);
+  const tick = function () {
+    requestId.runAs('job', run);
+  };
+  setTimeout(tick, 5000).unref();
+  timer = setInterval(tick, every);
   timer.unref();
   logger.info('[job] overdue reminders every ' + (minutes || 60) + ' min');
 }
