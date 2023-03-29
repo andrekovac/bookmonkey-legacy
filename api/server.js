@@ -2,6 +2,8 @@ const path = require('path');
 const express = require('express');
 const db = require('./db');
 const routes = require('./routes');
+// TypeScript, runs without a build step (only erasable syntax, see docs/adr/0001)
+const v2 = require('./src/v2/app.ts').default;
 const session = require('./lib/session');
 const logger = require('./lib/logger');
 const requestId = require('./lib/request-id');
@@ -48,6 +50,7 @@ app.get('/health', function (req, res) {
 });
 
 app.use('/api/v1', routes);
+app.use('/api/v2', v2);
 
 app.use('/api', function (req, res) {
   res.status(404).json({ error: 'not found' });
