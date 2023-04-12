@@ -4,7 +4,7 @@ import type { Request, Response } from 'express';
 import pricing from '../../lib/pricing.js';
 import utils from '../../lib/utils.js';
 import * as repo from './repo.ts';
-import { bookListQuery, isbnParam } from './schema.ts';
+import { bookListQuery, isbnParam, searchQuery } from './schema.ts';
 import { validate, notFound } from './http.ts';
 import type { Book, BookRow, BookSummary, Page, Price } from './types.ts';
 
@@ -93,8 +93,22 @@ function detail(req: Request, res: Response) {
   res.json(toBook(row));
 }
 
+// GET /api/v2/books/search?q=dune&in=title,author&limit=10
+function search(req: Request, res: Response) {
+  const query = validate(searchQuery, req.query, res, 'query');
+  if (!query) return;
+  const result = repo.searchBooks(query.q, query.in, query.limit);
+  res.json({
+    query: query.q,
+    fields: query.in,
+    total: result.total,
+    items: result.rows.map(toSummary)
+  });
+}
+
 const router = express.Router();
 router.get('/', list);
+router.get('/search', search);
 router.get('/publishers', publishers);
 router.get('/:isbn', detail);
 

@@ -46,7 +46,8 @@ export function countBooks(query: BookQuery): number {
   return row.n;
 }
 
-// v2 accepts the isbn with or without hyphens, the DB has the printed form
+// v2 accepts the isbn with or without hyphens (schema.ts makes it plain),
+// the DB has the printed form
 export function findByIsbn(isbn: string): BookRow | undefined {
   return db.open().prepare('SELECT * FROM books WHERE isbn = ?').get(isbnLib.format(isbn)) as BookRow | undefined;
 }
@@ -56,4 +57,26 @@ export function publishers(): Publisher[] {
     .prepare('SELECT publisher, COUNT(*) AS n FROM books WHERE publisher IS NOT NULL GROUP BY publisher ORDER BY publisher')
     .all() as Array<{ publisher: string; n: number }>;
   return rows.map(r => ({ name: r.publisher, books: r.n }));
+}
+
+// v2 search: every word has to match in one of the fields, title hits first.
+// LIKE is fine for 50 to 500 books, full text search (FTS5) when the catalogue gets bigger.
+export type SearchField = 'title' | 'subtitle' | 'author' | 'publisher' | 'abstract';
+
+export function searchBooks(q: string, fields: SearchField[], limit: number): { rows: BookRow[]; total: number } {
+  const words = q.split(/\s+/).filter(Boolean).slice(0, 5);
+  const parts: string[] = [];
+  const params: Array<string | number> = [];
+  words.forEach(word => {
+    parts.push('(' + fields.map(f => f + ' LIKE ?').join(' OR ') + ')');
+    fields.forEach(() => params.push('%' + word + '%'));
+  });
+  const whereSql = ' WHERE ' + parts.join(' AND ');
+  const conn = db.open();
+  const total = (conn.prepare('SELECT COUNT(*) AS n FROM books' + whereSql).get(...params) as { n: number }).n;
+  const rank = 'CASE WHEN title LIKE ? THEN 0 WHEN author LIKE ? THEN 1 ELSE 2 END';
+  const rows = conn
+    .prepare('SELECT * FROM books' + whereSql + ' ORDER BY ' + rank + ', title LIMIT ?')
+    .all(...params, '%' + q + '%', '%' + q + '%', limit) as BookRow[];
+  return { rows, total };
 }
