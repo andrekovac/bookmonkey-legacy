@@ -17,11 +17,17 @@ class Header extends React.Component {
       else cart.clear();
     });
     this.unsubscribeCart = cart.subscribe(c => this.setState({ count: c.count }));
+    // api/client.js: a request came back with 401 -> session cookie is gone, reload "me"
+    this.onUnauthorized = () => {
+      if (this.state.user) session.load();
+    };
+    window.addEventListener('bm:unauthorized', this.onUnauthorized);
   }
 
   componentWillUnmount() {
     this.unsubscribe();
     this.unsubscribeCart();
+    window.removeEventListener('bm:unauthorized', this.onUnauthorized);
   }
 
   logout(e) {

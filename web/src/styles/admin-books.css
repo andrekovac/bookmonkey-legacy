@@ -1,0 +1,84 @@
+/* Bücher im neuen Admin (2023) */
+
+.books-admin {
+  display: flex;
+  align-items: flex-start;
+}
+
+.books-admin__list {
+  flex: 3;
+  min-width: 0;
+}
+
+.books-admin__edit {
+  flex: 2;
+  margin-left: 16px;
+  position: sticky;
+  top: 12px;
+}
+
+.books-admin__cover {
+  width: 32px;
+  height: 46px;
+  object-fit: cover;
+  background: #f0e9df;
+}
+
+.books-admin__row--selected td {
+  background: #f6efe4;
+}
+
+.books-admin__table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.books-admin__pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+
+.books-admin__notice {
+  background: #eef8ec;
+  border: 1px solid #b9ddb1;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.book-form__grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 10px -6px 0;
+}
+
+.book-form__field {
+  display: block;
+  flex: 1 1 100%;
+  padding: 0 6px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #6d645b;
+}
+
+.book-form__field--small {
+  flex: 1 1 30%;
+}
+
+.book-form__field input,
+.book-form__field textarea {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 3px;
+}
+
+.book-form__open {
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.book-form__actions {
+  margin-top: 6px;
+}
