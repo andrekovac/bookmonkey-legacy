@@ -1,12 +1,32 @@
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const db = require('../db');
 
+const BCRYPT_ROUNDS = 10;
+
+// new passwords (register, password change) since 2023
 function hashPassword(password) {
+  return bcrypt.hashSync(String(password), BCRYPT_ROUNDS);
+}
+
+// accounts from the shop days have an md5 hash. They get a bcrypt hash
+// the next time the password is changed.
+function legacyHash(password) {
   return crypto.createHash('md5').update(String(password)).digest('hex');
 }
 
 function checkPassword(password, hash) {
-  return hashPassword(password) === hash;
+  if (!hash) return false;
+  try {
+    if (bcrypt.compareSync(String(password), hash)) return true;
+  } catch (e) {
+    // not a bcrypt hash
+  }
+  return legacyHash(password) === hash;
+}
+
+function isLegacyHash(hash) {
+  return /^[0-9a-f]{32}$/.test(String(hash || ''));
 }
 
 function findUserByEmail(email) {
@@ -51,6 +71,8 @@ function requireAdmin(req, res, next) {
 
 module.exports = {
   hashPassword,
+  legacyHash,
+  isLegacyHash,
   checkPassword,
   findUser,
   findUserByEmail,
