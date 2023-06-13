@@ -619,7 +619,7 @@ router.post('/books', function (req, res) {
   const errors = validateBook(body, true);
   if (errors.length) return res.status(400).json({ error: errors.join(', ') });
 
-  const isbn = isbnLib.format(body.isbn);
+  const isbn = isbnLib.normalizeIsbn(body.isbn);
   if (findBook(isbn)) return res.status(409).json({ error: 'book with this isbn exists already' });
 
   const columns = ['isbn', 'created_at', 'updated_at'];
@@ -653,11 +653,12 @@ router.put('/books/:isbn', function (req, res) {
   });
   if (!sets.length) return res.json(toBook(existing));
 
-  sets.push('updated_at = ?');
-  values.push(utils.now());
+  const isbn = isbnLib.normalizeIsbn(existing.isbn);
+  sets.push('isbn = ?', 'updated_at = ?');
+  values.push(isbn, utils.now());
   values.push(existing.id);
   db.open().prepare('UPDATE books SET ' + sets.join(', ') + ' WHERE id = ?').run(...values);
-  res.json(toBook(findBook(existing.isbn)));
+  res.json(toBook(findBook(isbn)));
 });
 
 router.get('/admin/orders', function (req, res) {

@@ -97,7 +97,15 @@ function format(value) {
   return [prefix, group, rest.slice(0, len), rest.slice(len), check].join('-');
 }
 
+// Form we store from now on: no hyphens, no spaces (9780747532699).
+// Shorter keys for the unique index, and the mobile app and the scanners send plain isbns anyway.
+// Use format() for display.
+function normalizeIsbn(value) {
+  return String(value || '').replace(/[\s-]/g, '').toUpperCase();
+}
+
 module.exports = {
+  normalizeIsbn,
   digitsOnly,
   isValid,
   from10,
