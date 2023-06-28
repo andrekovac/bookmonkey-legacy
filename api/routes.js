@@ -5,6 +5,7 @@
 //   loans, reservations
 //   ---- router.use(auth.requireAdmin) ----
 //   admin: books, orders, users, copies, acquisitions, discounts, loans, outbox
+// (publishers and outbox are in routes/ already, see routes/index.js)
 const express = require('express');
 const db = require('./db');
 const utils = require('./lib/utils');
@@ -19,7 +20,7 @@ const reservations = require('./services/reservations');
 const waitlist = require('./services/waitlist');
 const inventory = require('./services/inventory');
 const ics = require('./lib/ics');
-const overdueJob = require('./jobs/overdue');
+const moved = require('./routes/index');
 
 const router = express.Router();
 
@@ -138,12 +139,7 @@ router.get('/books', function (req, res) {
   res.json(rows.map(toBook));
 });
 
-router.get('/publishers', function (req, res) {
-  const rows = db.open()
-    .prepare('SELECT publisher, COUNT(*) AS count FROM books WHERE publisher IS NOT NULL GROUP BY publisher ORDER BY publisher')
-    .all();
-  res.json(rows);
-});
+router.use(moved.publishers);
 
 function findBook(isbn) {
   return db.open().prepare('SELECT * FROM books WHERE isbn = ?').get(isbn);
@@ -1030,18 +1026,6 @@ router.get('/admin/reservations', function (req, res) {
   res.json(reservations.list(opts));
 });
 
-router.get('/admin/outbox', function (req, res) {
-  res.json(mailer.list({ status: req.query.status, limit: utils.toInt(req.query._limit, 200) }));
-});
-
-router.post('/admin/outbox/:id/sent', function (req, res) {
-  if (!mailer.markSent(req.params.id)) return res.status(404).json({ error: 'mail not found' });
-  res.json({ ok: true });
-});
-
-// run the reminder job now instead of waiting for the interval
-router.post('/admin/jobs/overdue', function (req, res) {
-  res.json(overdueJob.run() || { running: true });
-});
+router.use(moved.outbox);
 
 module.exports = router;
