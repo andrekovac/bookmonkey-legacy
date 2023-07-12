@@ -3,10 +3,29 @@ import { Link } from 'react-router-dom';
 import api from '../api/client';
 import AdminOnly from '../components/AdminOnly.jsx';
 import BookForm from '../components/BookForm.jsx';
-import { formatPrice } from '../utils/format';
+import { formatDate, formatPrice } from '../utils/format';
 import '../styles/admin-books.css';
 
 const PAGE_SIZE = 25;
+
+const COLUMNS = [
+  { key: 'title', label: 'Titel' },
+  { key: 'author', label: 'Autor' },
+  { key: 'publisher', label: 'Verlag' },
+  { key: 'publishedAt', label: 'erschienen' },
+  { key: 'numPages', label: 'Seiten', num: true },
+  { key: 'price', label: 'Preis netto', num: true }
+];
+
+function SortHeader({ column, sort, onSort }) {
+  const active = sort.key === column.key;
+  const arrow = active ? (sort.order === 'desc' ? ' ▼' : ' ▲') : '';
+  return (
+    <th className={(column.num ? 'num ' : '') + 'books-admin__sort' + (active ? ' books-admin__sort--active' : '')}>
+      <button type="button" className="link-button" onClick={() => onSort(column.key)}>{column.label}{arrow}</button>
+    </th>
+  );
+}
 
 // Bücher im neuen Admin. Replaces the books part of /admin-old step by step.
 export default function AdminBooks() {
@@ -15,6 +34,7 @@ export default function AdminBooks() {
   const [q, setQ] = useState('');
   const [publisher, setPublisher] = useState('');
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState({ key: 'title', order: 'asc' });
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -23,7 +43,9 @@ export default function AdminBooks() {
   function load() {
     setLoading(true);
     setError(null);
-    return api.get('/books', { query: { q: q, publisher: publisher, _page: page, _limit: PAGE_SIZE } })
+    return api.get('/books', {
+      query: { q: q, publisher: publisher, _sort: sort.key, _order: sort.order, _page: page, _limit: PAGE_SIZE }
+    })
       .then(setBooks)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
@@ -31,7 +53,7 @@ export default function AdminBooks() {
 
   useEffect(() => {
     load();
-  }, [page, publisher]);
+  }, [page, publisher, sort]);
 
   useEffect(() => {
     api.get('/publishers').then(setPublishers).catch(() => setPublishers([]));
@@ -41,6 +63,11 @@ export default function AdminBooks() {
     e.preventDefault();
     if (page !== 1) setPage(1);
     else load();
+  }
+
+  function changeSort(key) {
+    setPage(1);
+    setSort(sort.key === key ? { key: key, order: sort.order === 'asc' ? 'desc' : 'asc' } : { key: key, order: 'asc' });
   }
 
   function open(isbn) {
@@ -83,11 +110,7 @@ export default function AdminBooks() {
             <thead>
               <tr>
                 <th></th>
-                <th>Titel</th>
-                <th>Autor</th>
-                <th>Verlag</th>
-                <th className="num">Seiten</th>
-                <th className="num">Preis netto</th>
+                {COLUMNS.map(c => <SortHeader key={c.key} column={c} sort={sort} onSort={changeSort} />)}
               </tr>
             </thead>
             <tbody>
@@ -101,12 +124,13 @@ export default function AdminBooks() {
                   <td>{b.title}<div className="admin-table__sub mono">{b.isbn}</div></td>
                   <td>{b.author}</td>
                   <td>{b.publisher}</td>
+                  <td>{formatDate(b.publishedAt)}</td>
                   <td className="num">{b.numPages}</td>
                   <td className="num">{formatPrice(b.price, b.currency)}</td>
                 </tr>
               ))}
               {!books.length && !loading && (
-                <tr><td colSpan="6" className="admin-count">Keine Bücher gefunden.</td></tr>
+                <tr><td colSpan="7" className="admin-count">Keine Bücher gefunden.</td></tr>
               )}
             </tbody>
           </table>

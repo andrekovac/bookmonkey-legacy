@@ -107,6 +107,7 @@ function columnValue(field, value) {
 }
 
 // GET /api/v1/books?q=potter&publisher=Bloomsbury&sort=price&order=desc&_page=1&_limit=12
+// GET /api/v1/books?_sort=publishedAt&_order=desc (json-server style, like the mobile app)
 router.get('/books', function (req, res) {
   const limit = utils.toInt(req.query._limit, 12);
   const page = utils.toInt(req.query._page, 1);
@@ -127,12 +128,13 @@ router.get('/books', function (req, res) {
     where.push("EXISTS (SELECT 1 FROM copies c WHERE c.book_id = books.id AND c.status = 'available')");
   }
 
-  const sort = SORT_COLUMNS[req.query.sort] || 'title';
-  const order = String(req.query.order).toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+  // ?sort=price (catalogue) or ?_sort=numPages&_order=desc, any column (admin table, mobile app)
+  const sort = utils.toSnake(req.query._sort) || SORT_COLUMNS[req.query.sort] || 'title';
+  const order = String(req.query._order || req.query.order).toLowerCase() === 'desc' ? 'DESC' : 'ASC';
 
   let sql = 'SELECT * FROM books';
   if (where.length) sql += ' WHERE ' + where.join(' AND ');
-  sql += ' ORDER BY ' + sort + ' ' + order + ', id LIMIT ? OFFSET ?';
+  sql += ` ORDER BY ${sort} ${order}, id LIMIT ? OFFSET ?`;
   params.push(limit, offset);
 
   const rows = db.open().prepare(sql).all(...params);

@@ -82,3 +82,14 @@
 .book-form__actions {
   margin-top: 6px;
 }
+
+.books-admin__sort .link-button {
+  color: #6d645b;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.books-admin__sort--active .link-button {
+  color: #7a3e1d;
+  font-weight: bold;
+}

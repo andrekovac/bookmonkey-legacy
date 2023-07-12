@@ -66,3 +66,11 @@ test('admin routes need admin', async function () {
   const res = await fetch(base + '/users');
   assert.strictEqual(res.status, 401);
 });
+
+test('sort by any column', async function () {
+  const res = await fetch(base + '/books?_sort=numPages&_order=desc&_limit=3');
+  const books = await res.json();
+  assert.strictEqual(books.length, 3);
+  assert.ok(books[0].numPages >= books[1].numPages);
+  assert.ok(books[1].numPages >= books[2].numPages);
+});

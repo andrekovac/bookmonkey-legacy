@@ -47,4 +47,13 @@ function parseJson(value, fallback) {
   }
 }
 
-module.exports = { now, stamp, today, addDays, barcode, pad, toInt, parseJson };
+// "numPages" -> "num_pages". Everything else is returned as it is
+// (snake_case column names are fine already)
+function toSnake(value) {
+  if (!value) return null;
+  const v = String(value).trim();
+  if (/^[a-z]+([A-Z][a-z0-9]*)+$/.test(v)) return v.replace(/[A-Z]/g, c => '_' + c.toLowerCase());
+  return v;
+}
+
+module.exports = { now, stamp, today, addDays, barcode, pad, toInt, parseJson, toSnake };
