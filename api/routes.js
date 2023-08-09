@@ -17,6 +17,7 @@ const session = require('./lib/session');
 const loans = require('./services/loans');
 const mailer = require('./lib/mailer');
 const reservations = require('./services/reservations');
+const reservationLinks = require('./services/reservation-links');
 const waitlist = require('./services/waitlist');
 const inventory = require('./services/inventory');
 const ics = require('./lib/ics');
@@ -602,6 +603,23 @@ router.post('/reservations', auth.requireLogin, function (req, res) {
 router.delete('/reservations/:id', auth.requireLogin, function (req, res) {
   try {
     res.json(reservations.cancel(req.params.id, req.session.uid, req.session.role === 'admin'));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Vormerkung per Mail-Link. No login, the token from the mail is the proof
+router.get('/reservations/link/:token', function (req, res) {
+  try {
+    res.json(reservationLinks.describe(req.params.token));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.post('/reservations/link/:token', function (req, res) {
+  try {
+    res.json(reservationLinks.perform(req.params.token));
   } catch (err) {
     sendError(res, err);
   }

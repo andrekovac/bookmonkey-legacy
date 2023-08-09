@@ -61,15 +61,17 @@ test('borrow, renew and return a book', async function () {
 });
 
 test('reserve a book when all copies are out', async function () {
-  // seed: both copies of Atomic Habits are out, 3 people waiting
+  // seed: both copies of Atomic Habits are out, 4 people waiting
   const avail = await (await fetch(base + '/books/978-0-7352-1129-2/availability')).json();
   assert.strictEqual(avail.available, 0);
-  assert.strictEqual(avail.waiting, 3);
+  assert.strictEqual(avail.waiting, 4);
 
   const cookie = await login('murat.yilmaz@example.com', 'murat2022');
   const res = await call(cookie, 'POST', '/reservations', { isbn: '978-0-7352-1129-2' });
   assert.strictEqual(res.status, 201);
-  assert.strictEqual((await res.json()).position, 4);
+  const created = await res.json();
+  assert.strictEqual(created.position, 5);
+  assert.ok(created.created_at.indexOf('T') === 10);
 });
 
 test('returned copy goes to the first person on the waitlist', async function () {

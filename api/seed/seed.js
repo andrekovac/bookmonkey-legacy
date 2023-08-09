@@ -155,21 +155,29 @@ function importLoans(db, list) {
   return list.length;
 }
 
-// Atomic Habits: both copies are out, three people on the waitlist
+// Atomic Habits: both copies are out, four people on the waitlist
 const WAITLIST = {
   isbn: '9780735211292',
   people: [
     { email: 'lea.hoffmann@example.com', at: [9, '08:47:12'] },
     { email: 'tobias.wagner@example.com', at: [6, '13:05:40'] },
-    { email: 'sarah.klein@example.com', at: [2, '17:22:03'] }
+    { email: 'sarah.klein@example.com', at: [2, '17:22:03'] },
+    // reserved through the mail link, the API writes ISO time (UTC) since 2023
+    { email: 'anja.richter@example.com', iso: [9, '00:30:00'], source: 'mail' }
   ]
 };
 
+// "YYYY-MM-DDTHH:MM:SS.000Z" n days ago, like new Date().toISOString() would have written it
+function isoAgo(days, time) {
+  return ago(days).slice(0, 10) + 'T' + time + '.000Z';
+}
+
 function importWaitlist(db, waitlist) {
   const book = db.prepare('SELECT id FROM books WHERE isbn = ?').get(isbn.format(waitlist.isbn));
-  const insert = db.prepare("INSERT INTO reservations (book_id, user_id, status, created_at) VALUES (?, ?, 'waiting', ?)");
+  const insert = db.prepare("INSERT INTO reservations (book_id, user_id, status, created_at, source) VALUES (?, ?, 'waiting', ?, ?)");
   waitlist.people.forEach(function (p) {
-    insert.run(book.id, userId(db, p.email), ago(p.at[0], p.at[1]));
+    const at = p.iso ? isoAgo(p.iso[0], p.iso[1]) : ago(p.at[0], p.at[1]);
+    insert.run(book.id, userId(db, p.email), at, p.source || 'web');
   });
   return waitlist.people.length;
 }
@@ -224,6 +232,7 @@ module.exports = {
   importReviews,
   readBooks,
   ago,
+  isoAgo,
   USERS,
   DISCOUNT_RULES,
   LOANS,

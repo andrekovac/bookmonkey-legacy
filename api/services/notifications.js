@@ -15,6 +15,14 @@ function link(path) {
   return mailer.BASE_URL + path;
 }
 
+// links that work without login, see services/reservation-links.js
+// (required lazily: reservation-links -> reservations -> waitlist -> notifications)
+function mailLink(kind, r) {
+  const links = require('./reservation-links');
+  const token = kind === 'decline' ? links.declineToken(r) : links.reserveToken(r);
+  return link('/reservations/link/' + encodeURIComponent(token));
+}
+
 // 2 days before the due date
 function dueSoon(loan) {
   return mailer.send({
@@ -104,7 +112,10 @@ function holdReady(r) {
       '"' + r.title + '" liegt für dich im Abholregal in ' + (r.copy_location || 'der Bibliothek') + ' (Exemplar ' + r.barcode + ').',
       'Bitte hol es bis ' + time(r.expires_at) + ' ab, danach geht es an die nächste Person auf der Warteliste.',
       '',
-      'Ausleihen: ' + link('/books/' + r.isbn)
+      'Ausleihen: ' + link('/books/' + r.isbn),
+      '',
+      'Du brauchst das Buch nicht mehr? Dann gib es hier frei, damit die nächste Person es bekommt:',
+      mailLink('decline', r)
     ].join('\n')
   });
 }
@@ -120,7 +131,8 @@ function holdExpired(r) {
       hello(r.user_name),
       '',
       'du hast "' + r.title + '" nicht innerhalb von 48 Stunden abgeholt, die Vormerkung ist deshalb abgelaufen.',
-      'Du kannst das Buch jederzeit wieder vormerken: ' + link('/books/' + r.isbn)
+      'Du kannst das Buch mit einem Klick wieder vormerken (ohne Anmeldung, 7 Tage gültig):',
+      mailLink('reserve', r)
     ].join('\n')
   });
 }

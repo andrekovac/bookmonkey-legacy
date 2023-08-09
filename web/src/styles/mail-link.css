@@ -1,0 +1,46 @@
+/* page behind the links in the library mails, mostly opened on a phone */
+
+.mail-link {
+  max-width: 480px;
+  margin: 24px auto;
+}
+
+.mail-link h1 {
+  font-size: 22px;
+}
+
+.mail-link__book {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e6ded3;
+  padding: 10px;
+  margin-bottom: 16px;
+}
+
+.mail-link__book img {
+  width: 60px;
+  height: 88px;
+  object-fit: cover;
+  margin-right: 12px;
+  background: #f0e9df;
+}
+
+.mail-link__sub {
+  font-size: 13px;
+  color: #8a7f73;
+  margin-top: 4px;
+}
+
+.mail-link__done {
+  background: #eef8ec;
+  border: 1px solid #b9ddb1;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+}
+
+.mail-link .primary {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+}

@@ -38,8 +38,9 @@ function create(userId, book, opts) {
   const available = conn.prepare("SELECT COUNT(*) AS n FROM copies WHERE book_id = ? AND status = 'available'").get(book.id).n;
   if (available > 0) throw fail(409, 'a copy is available, you can borrow it right away');
 
-  const r = conn.prepare("INSERT INTO reservations (book_id, user_id, status, location, created_at) VALUES (?, ?, 'waiting', ?, ?)")
-    .run(book.id, userId, opts.location || null, utils.now());
+  // created_at as ISO time (UTC), the mobile app and v2 need a real timestamp
+  const r = conn.prepare("INSERT INTO reservations (book_id, user_id, status, location, created_at, source) VALUES (?, ?, 'waiting', ?, ?, ?)")
+    .run(book.id, userId, opts.location || null, new Date().toISOString(), opts.via || 'web');
   return withPosition(waitlist.findReservation(Number(r.lastInsertRowid)));
 }
 
