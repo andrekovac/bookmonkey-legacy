@@ -22,6 +22,7 @@ const waitlist = require('./services/waitlist');
 const inventory = require('./services/inventory');
 const ics = require('./lib/ics');
 const moved = require('./routes/index');
+const cache = require('./lib/cache');
 
 const router = express.Router();
 
@@ -109,7 +110,7 @@ function columnValue(field, value) {
 
 // GET /api/v1/books?q=potter&publisher=Bloomsbury&sort=price&order=desc&_page=1&_limit=12
 // GET /api/v1/books?_sort=publishedAt&_order=desc (json-server style, like the mobile app)
-router.get('/books', function (req, res) {
+router.get('/books', cache.json(60 * 1000), function (req, res) {
   const limit = utils.toInt(req.query._limit, 12);
   const page = utils.toInt(req.query._page, 1);
   const offset = (page - 1) * limit;
