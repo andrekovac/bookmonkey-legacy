@@ -45,7 +45,6 @@ app.get('/health', function (req, res) {
     db: dbOk ? 'ok' : 'error',
     started: started,
     uptime: Math.round(process.uptime()),
-    cache: require('./lib/cache').stats(),
     node: process.version
   });
 });
