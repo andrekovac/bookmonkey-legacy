@@ -20,6 +20,7 @@ const reservations = require('./services/reservations');
 const reservationLinks = require('./services/reservation-links');
 const waitlist = require('./services/waitlist');
 const inventory = require('./services/inventory');
+const bookService = require('./services/books');
 const ics = require('./lib/ics');
 const moved = require('./routes/index');
 
@@ -58,7 +59,7 @@ const SORT_COLUMNS = {
   publisher: 'publisher'
 };
 
-// request field -> column
+// request field -> column (POST /books; PUT goes through services/books.js)
 const BOOK_FIELDS = {
   title: 'title',
   subtitle: 'subtitle',
@@ -660,21 +661,7 @@ router.put('/books/:isbn', function (req, res) {
   const errors = validateBook(body, false);
   if (errors.length) return res.status(400).json({ error: errors.join(', ') });
 
-  const sets = [];
-  const values = [];
-  Object.keys(BOOK_FIELDS).forEach(function (field) {
-    if (body[field] === undefined) return;
-    sets.push(BOOK_FIELDS[field] + ' = ?');
-    values.push(columnValue(field, body[field]));
-  });
-  if (!sets.length) return res.json(toBook(existing));
-
-  const isbn = isbnLib.normalizeIsbn(existing.isbn);
-  sets.push('isbn = ?', 'updated_at = ?');
-  values.push(isbn, utils.now());
-  values.push(existing.id);
-  db.open().prepare('UPDATE books SET ' + sets.join(', ') + ' WHERE id = ?').run(...values);
-  res.json(toBook(findBook(isbn)));
+  res.json(toBook(bookService.update(existing, body)));
 });
 
 router.get('/admin/orders', function (req, res) {

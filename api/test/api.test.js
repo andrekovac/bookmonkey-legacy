@@ -74,3 +74,22 @@ test('sort by any column', async function () {
   assert.ok(books[0].numPages >= books[1].numPages);
   assert.ok(books[1].numPages >= books[2].numPages);
 });
+
+test('admin can update a book', async function () {
+  const login = await fetch(base + '/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'admin@bookmonkey.example', password: 'admin2021' })
+  });
+  const cookie = login.headers.get('set-cookie').split(';')[0];
+  const res = await fetch(base + '/books/978-0-451-52493-5', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+    body: JSON.stringify({ subtitle: 'A Novel', price: '10,99' })
+  });
+  assert.strictEqual(res.status, 200);
+  const book = await res.json();
+  assert.strictEqual(book.subtitle, 'A Novel');
+  assert.strictEqual(book.price, 10.99);
+  assert.strictEqual(book.title, '1984');
+});
