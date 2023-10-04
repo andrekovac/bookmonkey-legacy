@@ -21,6 +21,7 @@ const reservationLinks = require('./services/reservation-links');
 const waitlist = require('./services/waitlist');
 const inventory = require('./services/inventory');
 const bookService = require('./services/books');
+const series = require('./services/series');
 const ics = require('./lib/ics');
 const moved = require('./routes/index');
 
@@ -1018,6 +1019,28 @@ router.post('/admin/loans/checkin', function (req, res) {
     // tell the desk if the copy goes to the hold shelf
     const hold = db.open().prepare("SELECT r.id, u.name, u.email FROM reservations r JOIN users u ON u.id = r.user_id WHERE r.copy_id = ? AND r.status = 'ready'").get(loan.copy_id);
     res.json({ loan: loan, copy: copy, hold: hold || null });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Serien
+router.get('/admin/series', function (req, res) {
+  res.json(series.all());
+});
+
+// {isbns: [...]} in reading order
+router.put('/admin/series', function (req, res) {
+  try {
+    res.json(series.save(req.body && req.body.isbns));
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+router.delete('/admin/series/:isbn', function (req, res) {
+  try {
+    res.json(series.remove(req.params.isbn));
   } catch (err) {
     sendError(res, err);
   }

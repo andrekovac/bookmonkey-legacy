@@ -93,3 +93,61 @@
   color: #7a3e1d;
   font-weight: bold;
 }
+
+/* Serien */
+
+.series-editor {
+  max-width: 640px;
+}
+
+.series-editor__list {
+  padding-left: 20px;
+}
+
+.series-editor__list li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.series-editor__list button {
+  margin-left: 4px;
+}
+
+.series-editor__title {
+  flex: 1;
+  margin-left: 8px;
+}
+
+.series-editor__volumes {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.series-editor__warn {
+  color: #b3261e;
+  font-weight: bold;
+}
+
+/* ISBN-Schnellsuche */
+
+.lookup__input {
+  width: 260px;
+  font-size: 18px;
+  padding: 6px;
+}
+
+.lookup__result {
+  display: flex;
+  align-items: flex-start;
+}
+
+.lookup__result img {
+  width: 110px;
+  margin-right: 16px;
+  background: #f0e9df;
+}
+
+.lookup__copies {
+  margin-top: 10px;
+}

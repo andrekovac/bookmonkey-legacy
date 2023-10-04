@@ -111,3 +111,12 @@ test('overdue job writes reminders into the outbox', function () {
   const rows = db.open().prepare("SELECT * FROM outbox WHERE kind LIKE 'overdue_%'").all();
   assert.ok(rows.length >= 1);
 });
+
+test('admin series list has the lord of the rings in order', async function () {
+  const admin = await login('admin@bookmonkey.example', 'admin2021');
+  const list = await (await call(admin, 'GET', '/admin/series')).json();
+  const lotr = list.find(s => s.volumes.some(v => v.title === 'The Fellowship of the Ring'));
+  assert.ok(lotr);
+  assert.strictEqual(lotr.volumes.length, 3);
+  assert.strictEqual(lotr.volumes[0].title, 'The Fellowship of the Ring');
+});

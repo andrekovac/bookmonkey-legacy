@@ -6,7 +6,9 @@ export default function AdminNav() {
     <nav className="admin-nav">
       <NavLink to="/admin/loans">Ausleihen</NavLink>
       <NavLink to="/admin/reservations">Vormerkungen</NavLink>
+      <NavLink to="/admin/lookup">ISBN</NavLink>
       <NavLink to="/admin/books">Bücher</NavLink>
+      <NavLink to="/admin/series">Serien</NavLink>
       <NavLink to="/admin/copies">Exemplare</NavLink>
       <NavLink to="/admin/acquisition">Neuanschaffung</NavLink>
       <NavLink to="/admin/inventory">Inventur</NavLink>
