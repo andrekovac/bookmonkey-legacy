@@ -52,6 +52,18 @@ app.get('/health', function (req, res) {
 app.use('/api/v1', routes);
 app.use('/api/v2', v2);
 
+// The mobile app (2023, first version) calls /api/books and /api/books/:isbn without a version.
+// Same as v1, read only. Remove when the app uses /api/v2 (ask the app team first!)
+app.use('/api/books', function (req, res, next) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return res.status(405).json({ error: 'read only, use /api/v1' });
+  }
+  res.set('Deprecation', 'true');
+  res.set('Link', '</api/v2/books>; rel="successor-version"');
+  req.url = '/books' + req.url.replace(/^\/(?=\?|$)/, '');
+  routes(req, res, next);
+});
+
 app.use('/api', function (req, res) {
   res.status(404).json({ error: 'not found' });
 });

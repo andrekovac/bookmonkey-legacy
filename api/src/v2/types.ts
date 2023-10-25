@@ -90,3 +90,38 @@ export type Publisher = {
   name: string;
   books: number;
 };
+
+// ---------------------------------------------------------------------------
+// loans (v2 loans are not mounted yet, see loans.ts)
+
+export type LoanRow = {
+  id: number;
+  copy_id: number;
+  user_id: number;
+  borrowed_at: string;
+  due_at: string;
+  returned_at: string | null;
+  renewals: number;
+  reminder_count: number;
+  barcode: string;
+  location: string;
+  book_id: number;
+  isbn: string;
+  title: string;
+  author: string | null;
+};
+
+export type LoanStatus = 'open' | 'dueSoon' | 'overdue' | 'returned';
+
+export type Loan = {
+  id: number;
+  status: LoanStatus;
+  borrowedAt: string;
+  dueAt: string;
+  returnedAt: string | null;
+  daysLeft: number | null;
+  renewals: number;
+  renewable: boolean;
+  copy: { barcode: string; location: string };
+  book: { isbn: string; title: string; author: string | null; cover: string };
+};

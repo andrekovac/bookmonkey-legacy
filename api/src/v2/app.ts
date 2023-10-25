@@ -4,6 +4,7 @@ import express from 'express';
 import type { NextFunction, Request, Response } from 'express';
 import logger from '../../lib/logger.js';
 import books from './books.ts';
+import { openapi } from './openapi.ts';
 import { sendErrors } from './http.ts';
 
 const VERSION = '2.0.0-beta';
@@ -20,8 +21,13 @@ v2.get('/', function (req: Request, res: Response) {
     version: VERSION,
     resources: {
       books: '/api/v2/books'
-    }
+    },
+    docs: '/api/v2/openapi.json'
   });
+});
+
+v2.get('/openapi.json', function (req: Request, res: Response) {
+  res.json(openapi);
 });
 
 v2.use('/books', books);
