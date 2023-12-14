@@ -9,7 +9,8 @@
     "db:reset": "node --disable-warning=ExperimentalWarning scripts/reset-db.js",
     "test": "node --disable-warning=ExperimentalWarning --test \"test/*.test.js\"",
     "import:csv": "node --disable-warning=ExperimentalWarning scripts/import-legacy-csv.js",
-    "import:copies": "node --disable-warning=ExperimentalWarning scripts/import-copies-csv.js"
+    "import:copies": "node --disable-warning=ExperimentalWarning scripts/import-copies-csv.js",
+    "smoke": "node scripts/smoke.js"
   },
   "dependencies": {
     "bcryptjs": "3.0.3",
