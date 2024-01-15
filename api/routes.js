@@ -24,6 +24,7 @@ const bookService = require('./services/books');
 const series = require('./services/series');
 const ics = require('./lib/ics');
 const moved = require('./routes/index');
+const i18n = require('./lib/i18n');
 
 const router = express.Router();
 
@@ -311,9 +312,11 @@ router.post('/auth/register', function (req, res) {
   if (auth.findUserByEmail(email)) {
     return res.status(409).json({ error: 'email is already registered' });
   }
+  // language: chosen on the register page, otherwise from the browser
+  const language = i18n.isLanguage(body.language) ? body.language : i18n.fromHeader(req.get('Accept-Language'));
   const result = db.open()
-    .prepare("INSERT INTO users (email, password, name, role, created_at) VALUES (?, ?, ?, 'customer', ?)")
-    .run(email, auth.hashPassword(body.password), body.name || null, utils.now());
+    .prepare("INSERT INTO users (email, password, name, role, language, created_at) VALUES (?, ?, ?, 'customer', ?, ?)")
+    .run(email, auth.hashPassword(body.password), body.name || null, language, utils.now());
   const user = auth.findUser(Number(result.lastInsertRowid));
   session.start(res, user);
   res.status(201).json(auth.publicUser(user));
@@ -361,6 +364,12 @@ router.put('/auth/me', auth.requireLogin, function (req, res) {
   }
   if (body.department !== undefined) {
     db.open().prepare('UPDATE users SET department = ? WHERE id = ?').run(String(body.department).slice(0, 80) || null, user.id);
+  }
+  if (body.language !== undefined) {
+    if (!i18n.isLanguage(body.language)) {
+      return res.status(400).json({ error: 'language must be one of ' + i18n.LANGUAGES.join(', ') });
+    }
+    db.open().prepare('UPDATE users SET language = ? WHERE id = ?').run(body.language, user.id);
   }
   res.json(auth.publicUser(auth.findUser(user.id)));
 });

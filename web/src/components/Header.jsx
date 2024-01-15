@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import * as session from '../session';
 import * as cart from '../cart';
+import { t, subscribe as onLanguage } from '../i18n';
+import LanguageSwitch from './LanguageSwitch.jsx';
 
 class Header extends React.Component {
   constructor(props) {
@@ -22,12 +24,14 @@ class Header extends React.Component {
       if (this.state.user) session.load();
     };
     window.addEventListener('bm:unauthorized', this.onUnauthorized);
+    this.unsubscribeLanguage = onLanguage(() => this.forceUpdate());
   }
 
   componentWillUnmount() {
     this.unsubscribe();
     this.unsubscribeCart();
     window.removeEventListener('bm:unauthorized', this.onUnauthorized);
+    this.unsubscribeLanguage();
   }
 
   logout(e) {
@@ -46,19 +50,20 @@ class Header extends React.Component {
             BookMonkey
           </Link>
           <nav className="nav">
-            <Link to="/">Katalog</Link>
-            {user && <Link to="/loans">Ausleihen</Link>}
-            {user && <Link to="/reservations">Vormerkungen</Link>}
-            {user && user.role === 'admin' && <Link to="/admin/loans">Admin</Link>}
-            {user && <Link to="/cart" className="nav-cart">Warenkorb ({this.state.count})</Link>}
+            <Link to="/">{t('nav.catalogue')}</Link>
+            {user && <Link to="/loans">{t('nav.loans')}</Link>}
+            {user && <Link to="/reservations">{t('nav.reservations')}</Link>}
+            {user && user.role === 'admin' && <Link to="/admin/loans">{t('nav.admin')}</Link>}
+            {user && <Link to="/cart" className="nav-cart">{t('nav.cart', { count: this.state.count })}</Link>}
             {user ? (
               <span className="nav-user">
                 <Link to="/account" className="nav-name">{user.name || user.email}</Link>
-                <a href="/logout" onClick={this.logout}>Abmelden</a>
+                <a href="/logout" onClick={this.logout}>{t('nav.logout')}</a>
               </span>
             ) : (
-              <Link to="/login">Anmelden</Link>
+              <Link to="/login">{t('nav.login')}</Link>
             )}
+            <LanguageSwitch />
           </nav>
         </div>
       </header>

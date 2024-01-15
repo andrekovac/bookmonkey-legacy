@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "catalogue": "Catalogue",
+    "loans": "Loans",
+    "reservations": "Reservations",
+    "admin": "Admin",
+    "cart": "Cart ({count})",
+    "login": "Log in",
+    "logout": "Log out",
+    "language": "Language"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "saved": "Saved.",
+    "cancel": "Cancel",
+    "back": "back",
+    "next": "next",
+    "remove": "remove",
+    "error": "Something went wrong."
+  },
+  "footer": "BookMonkey · Company library & shop",
+  "catalogue": {
+    "title": "Catalogue",
+    "loading": "Loading books...",
+    "empty": "No books found.",
+    "emptyFor": "No books found for \"{q}\".",
+    "onlyAvailable": "available only",
+    "page": "Page {page}",
+    "sort": {
+      "titleAsc": "Title A-Z",
+      "titleDesc": "Title Z-A",
+      "author": "Author",
+      "priceAsc": "Price, low to high",
+      "priceDesc": "Price, high to low",
+      "newest": "Newest first"
+    }
+  },
+  "detail": {
+    "back": "« Catalogue",
+    "notFound": "Sorry, this book does not exist.",
+    "backToCatalogue": "Back to the catalogue",
+    "publisher": "Publisher",
+    "published": "Published",
+    "pages": "Pages",
+    "isbn": "ISBN",
+    "addToCart": "Add to cart",
+    "added": "In your cart!",
+    "description": "Description"
+  },
+  "login": {
+    "title": "Log in",
+    "email": "E-mail",
+    "password": "Password",
+    "submit": "Log in",
+    "busy": "One moment...",
+    "missing": "Please enter e-mail and password.",
+    "wrong": "Wrong e-mail or password.",
+    "newHere": "New to BookMonkey?",
+    "register": "Create an account"
+  },
+  "price": {
+    "onRequest": "Price on request",
+    "vat": "incl. 7 % VAT"
+  }
+}

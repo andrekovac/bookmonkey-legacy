@@ -54,16 +54,16 @@ const USERS = [
   { email: 'murat.yilmaz@example.com', password: 'murat2022', name: 'Murat Yilmaz', role: 'customer', location: 'Hamburg', department: 'Einkauf' },
   { email: 'anja.richter@example.com', password: 'anja2022', name: 'Anja Richter', role: 'customer', location: 'München', department: 'Personal' },
   // registered after the switch to bcrypt (2023)
-  { email: 'nina.vogel@example.com', password: 'vogel2023', name: 'Nina Vogel', role: 'customer', location: 'Berlin', department: 'Entwicklung', bcrypt: true },
+  { email: 'nina.vogel@example.com', password: 'vogel2023', name: 'Nina Vogel', role: 'customer', location: 'Berlin', department: 'Entwicklung', bcrypt: true, language: 'en' },
   { email: 'team.muenchen@bookmonkey.example', password: 'isar2023', name: 'Team München', role: 'admin', location: 'München', bcrypt: true }
 ];
 
 function importUsers(db, users) {
-  const insert = db.prepare('INSERT INTO users (email, password, name, role, location, department, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  const insert = db.prepare('INSERT INTO users (email, password, name, role, location, department, language, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
   users.forEach(function (u) {
     // old accounts keep their md5 hash, same as in production
     const hash = u.bcrypt ? auth.hashPassword(u.password) : auth.legacyHash(u.password);
-    insert.run(u.email, hash, u.name, u.role, u.location || null, u.department || null, utils.now());
+    insert.run(u.email, hash, u.name, u.role, u.location || null, u.department || null, u.language || 'de', utils.now());
   });
   return users.length;
 }

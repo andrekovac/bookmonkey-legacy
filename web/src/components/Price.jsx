@@ -1,12 +1,13 @@
 import React from 'react';
 import { formatPrice } from '../utils/format';
+import { t } from '../i18n';
 
 // gross price as shown to customers. With a discount rule: old price crossed out
 class Price extends React.Component {
   render() {
     const { book, showVat } = this.props;
     if (book.priceGross === null || book.priceGross === undefined) {
-      return <span className="price price--none">Preis auf Anfrage</span>;
+      return <span className="price price--none">{t('price.onRequest')}</span>;
     }
     return (
       <span className={book.discount ? 'price price--discount' : 'price'}>
@@ -17,7 +18,7 @@ class Price extends React.Component {
         {book.discount && showVat && (
           <span className="price__badge">-{Math.round(book.discount * 100)} % {book.discountName}</span>
         )}
-        {showVat && <small className="price__vat"> inkl. 7 % MwSt.</small>}
+        {showVat && <small className="price__vat"> {t('price.vat')}</small>}
       </span>
     );
   }

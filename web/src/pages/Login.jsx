@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import withRouter from '../components/withRouter.jsx';
 import * as session from '../session';
+import { t } from '../i18n';
 
 class Login extends React.Component {
   constructor(props) {
@@ -20,7 +21,7 @@ class Login extends React.Component {
   onSubmit(e) {
     e.preventDefault();
     if (!this.state.email || !this.state.password) {
-      this.setState({ error: 'Bitte E-Mail und Passwort eingeben.' });
+      this.setState({ error: t('login.missing') });
       return;
     }
     this.setState({ busy: true, error: null });
@@ -28,7 +29,7 @@ class Login extends React.Component {
       if (err) {
         this.setState({
           busy: false,
-          error: err.status === 401 ? 'E-Mail oder Passwort falsch.' : err.message
+          error: err.status === 401 ? t('login.wrong') : err.message
         });
         return;
       }
@@ -39,11 +40,11 @@ class Login extends React.Component {
   render() {
     return (
       <div className="login">
-        <h1>Anmelden</h1>
+        <h1>{t('login.title')}</h1>
         <form onSubmit={this.onSubmit} className="form">
           {this.state.error && <div className="error">{this.state.error}</div>}
           <label>
-            E-Mail
+            {t('login.email')}
             <input
               type="email"
               value={this.state.email}
@@ -52,7 +53,7 @@ class Login extends React.Component {
             />
           </label>
           <label>
-            Passwort
+            {t('login.password')}
             <input
               type="password"
               value={this.state.password}
@@ -61,11 +62,11 @@ class Login extends React.Component {
             />
           </label>
           <button type="submit" className="primary" disabled={this.state.busy}>
-            {this.state.busy ? 'Moment...' : 'Anmelden'}
+            {this.state.busy ? t('login.busy') : t('login.submit')}
           </button>
         </form>
         <p>
-          Neu bei BookMonkey? <Link to="/register">Kundenkonto anlegen</Link>
+          {t('login.newHere')} <Link to="/register">{t('login.register')}</Link>
         </p>
       </div>
     );

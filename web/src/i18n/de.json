@@ -1,0 +1,66 @@
+{
+  "nav": {
+    "catalogue": "Katalog",
+    "loans": "Ausleihen",
+    "reservations": "Vormerkungen",
+    "admin": "Admin",
+    "cart": "Warenkorb ({count})",
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "language": "Sprache"
+  },
+  "common": {
+    "loading": "Lade...",
+    "save": "Speichern",
+    "saved": "Gespeichert.",
+    "cancel": "Abbrechen",
+    "back": "zurück",
+    "next": "weiter",
+    "remove": "entfernen",
+    "error": "Etwas ist schiefgegangen."
+  },
+  "footer": "BookMonkey · Firmenbibliothek & Shop",
+  "catalogue": {
+    "title": "Katalog",
+    "loading": "Lade Bücher...",
+    "empty": "Keine Bücher gefunden.",
+    "emptyFor": "Keine Bücher gefunden für \"{q}\".",
+    "onlyAvailable": "nur ausleihbare",
+    "page": "Seite {page}",
+    "sort": {
+      "titleAsc": "Titel A-Z",
+      "titleDesc": "Titel Z-A",
+      "author": "Autor",
+      "priceAsc": "Preis aufsteigend",
+      "priceDesc": "Preis absteigend",
+      "newest": "Neueste zuerst"
+    }
+  },
+  "detail": {
+    "back": "« Katalog",
+    "notFound": "Dieses Buch gibt es leider nicht.",
+    "backToCatalogue": "Zurück zum Katalog",
+    "publisher": "Verlag",
+    "published": "Erschienen",
+    "pages": "Seiten",
+    "isbn": "ISBN",
+    "addToCart": "In den Warenkorb",
+    "added": "Im Warenkorb!",
+    "description": "Beschreibung"
+  },
+  "login": {
+    "title": "Anmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "busy": "Moment...",
+    "missing": "Bitte E-Mail und Passwort eingeben.",
+    "wrong": "E-Mail oder Passwort falsch.",
+    "newHere": "Neu bei BookMonkey?",
+    "register": "Kundenkonto anlegen"
+  },
+  "price": {
+    "onRequest": "Preis auf Anfrage",
+    "vat": "inkl. 7 % MwSt."
+  }
+}

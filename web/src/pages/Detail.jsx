@@ -9,6 +9,7 @@ import Reviews from '../components/Reviews.jsx';
 import * as cart from '../cart';
 import * as session from '../session';
 import { formatDate, joinAuthors } from '../utils/format';
+import { t } from '../i18n';
 import '../styles/detail.css';
 import '../styles/library.css';
 
@@ -37,7 +38,7 @@ class Detail extends React.Component {
         this.setState({
           loading: false,
           book: null,
-          error: err.status === 404 ? 'Dieses Buch gibt es leider nicht.' : err.message
+          error: err.status === 404 ? t('detail.notFound') : err.message
         });
         return;
       }
@@ -64,13 +65,13 @@ class Detail extends React.Component {
       return (
         <div>
           <div className="error">{error}</div>
-          <Link to="/">Zurück zum Katalog</Link>
+          <Link to="/">{t('detail.backToCatalogue')}</Link>
         </div>
       );
     }
     return (
       <div className="detail">
-        <Link to="/" className="detail-back">&laquo; Katalog</Link>
+        <Link to="/" className="detail-back">{t('detail.back')}</Link>
         <div className="detail-main">
           <img className="detail-cover" src={book.cover} alt={book.title} />
           <div className="detail-info">
@@ -79,21 +80,21 @@ class Detail extends React.Component {
             <div className="detail-author">{joinAuthors(book.author, book.coAuthors)}</div>
             <table className="detail-facts">
               <tbody>
-                <tr><th>Verlag</th><td>{book.publisher}</td></tr>
-                <tr><th>Erschienen</th><td>{formatDate(book.publishedAt)}</td></tr>
-                <tr><th>Seiten</th><td>{book.numPages}</td></tr>
-                <tr><th>ISBN</th><td>{book.isbn}</td></tr>
+                <tr><th>{t('detail.publisher')}</th><td>{book.publisher}</td></tr>
+                <tr><th>{t('detail.published')}</th><td>{formatDate(book.publishedAt)}</td></tr>
+                <tr><th>{t('detail.pages')}</th><td>{book.numPages}</td></tr>
+                <tr><th>{t('detail.isbn')}</th><td>{book.isbn}</td></tr>
               </tbody>
             </table>
             <div className="detail-price"><Price book={book} showVat /></div>
-            <button className="primary" onClick={this.addToCart}>In den Warenkorb</button>
-            {added && <span className="detail-added"> Im Warenkorb!</span>}
+            <button className="primary" onClick={this.addToCart}>{t('detail.addToCart')}</button>
+            {added && <span className="detail-added"> {t('detail.added')}</span>}
             <Availability isbn={book.isbn} />
             <SeriesNav book={book} />
           </div>
         </div>
         <div className="detail-abstract">
-          <h3>Beschreibung</h3>
+          <h3>{t('detail.description')}</h3>
           <p>{book.abstract}</p>
         </div>
         <Reviews isbn={book.isbn} />

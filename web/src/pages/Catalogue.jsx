@@ -4,16 +4,17 @@ import BookCard from '../components/BookCard.jsx';
 import SearchBox from '../components/SearchBox.jsx';
 import PublisherFilter from '../components/PublisherFilter.jsx';
 import withRouter from '../components/withRouter.jsx';
+import { t } from '../i18n';
 
 const PAGE_SIZE = 12;
 
 const SORT_OPTIONS = [
-  { value: 'title:asc', label: 'Titel A-Z' },
-  { value: 'title:desc', label: 'Titel Z-A' },
-  { value: 'author:asc', label: 'Autor' },
-  { value: 'price:asc', label: 'Preis aufsteigend' },
-  { value: 'price:desc', label: 'Preis absteigend' },
-  { value: 'published:desc', label: 'Neueste zuerst' }
+  { value: 'title:asc', label: 'catalogue.sort.titleAsc' },
+  { value: 'title:desc', label: 'catalogue.sort.titleDesc' },
+  { value: 'author:asc', label: 'catalogue.sort.author' },
+  { value: 'price:asc', label: 'catalogue.sort.priceAsc' },
+  { value: 'price:desc', label: 'catalogue.sort.priceDesc' },
+  { value: 'published:desc', label: 'catalogue.sort.newest' }
 ];
 
 function readQuery(search) {
@@ -119,30 +120,30 @@ class Catalogue extends React.Component {
     const { books, loading, error, page, q, publisher, sort, available } = this.state;
     return (
       <div className="catalogue">
-        <h1>Katalog</h1>
+        <h1>{t('catalogue.title')}</h1>
         <div className="toolbar">
           <SearchBox value={q} onSearch={this.onSearch} />
           <PublisherFilter value={publisher} onChange={this.onPublisher} />
           <select className="sort-select" value={sort} onChange={this.onSort}>
             {SORT_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>{t(o.label)}</option>
             ))}
           </select>
           <label className="toolbar-check">
-            <input type="checkbox" checked={available} onChange={this.onAvailable} /> nur ausleihbare
+            <input type="checkbox" checked={available} onChange={this.onAvailable} /> {t('catalogue.onlyAvailable')}
           </label>
         </div>
         {error && <div className="error">{error}</div>}
-        {loading && <div className="loading">Lade Bücher...</div>}
+        {loading && <div className="loading">{t('catalogue.loading')}</div>}
         {!loading && books.length === 0 && (
-          <div className="empty">Keine Bücher gefunden{q ? ' für "' + q + '"' : ''}.</div>
+          <div className="empty">{q ? t('catalogue.emptyFor', { q: q }) : t('catalogue.empty')}</div>
         )}
         <div className="book-grid">
           {books.map(book => <BookCard key={book.isbn} book={book} />)}
         </div>
         <div className="pager">
           <button onClick={this.prevPage} disabled={page <= 1}>&laquo; zurück</button>
-          <span className="pager-page">Seite {page}</span>
+          <span className="pager-page">{t('catalogue.page', { page: page })}</span>
           <button onClick={this.nextPage} disabled={books.length < PAGE_SIZE}>weiter &raquo;</button>
         </div>
       </div>

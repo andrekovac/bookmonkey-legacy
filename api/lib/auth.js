@@ -48,7 +48,8 @@ function publicUser(user) {
     name: user.name,
     role: user.role,
     location: user.location || null,
-    department: user.department || null
+    department: user.department || null,
+    language: user.language || 'de'
   };
 }
 
