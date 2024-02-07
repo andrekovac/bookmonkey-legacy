@@ -6,6 +6,7 @@ import SeriesNav from '../components/SeriesNav.jsx';
 import Price from '../components/Price.jsx';
 import Availability from '../components/Availability.jsx';
 import Reviews from '../components/Reviews.jsx';
+import WishlistButton from '../components/WishlistButton.jsx';
 import * as cart from '../cart';
 import * as session from '../session';
 import { formatDate, joinAuthors } from '../utils/format';
@@ -88,6 +89,7 @@ class Detail extends React.Component {
             </table>
             <div className="detail-price"><Price book={book} showVat /></div>
             <button className="primary" onClick={this.addToCart}>{t('detail.addToCart')}</button>
+            <WishlistButton isbn={book.isbn} />
             {added && <span className="detail-added"> {t('detail.added')}</span>}
             <Availability isbn={book.isbn} />
             <SeriesNav book={book} />

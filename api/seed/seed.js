@@ -208,6 +208,23 @@ function importReviews(db, list) {
   return list.length;
 }
 
+// Merkliste (2024): a few entries so the page is not empty for the test accounts
+const WISHLIST = [
+  { email: 'lea.hoffmann@example.com', isbn: '9780441172696', days: 14, note: 'nach Dune' },
+  { email: 'lea.hoffmann@example.com', isbn: '9781455586691', days: 4 },
+  { email: 'nina.vogel@example.com', isbn: '9780765356130', days: 21, note: 'Mistborn 2' },
+  { email: 'mia.schulz@example.com', isbn: '9780374533557', days: 2 }
+];
+
+function importWishlist(db, list) {
+  const insert = db.prepare('INSERT INTO wishlist (user_id, book_id, note, created_at) VALUES (?, ?, ?, ?)');
+  list.forEach(function (w) {
+    const book = db.prepare('SELECT id FROM books WHERE isbn = ?').get(isbn.format(w.isbn));
+    insert.run(userId(db, w.email), book.id, w.note || null, ago(w.days, '12:00:00'));
+  });
+  return list.length;
+}
+
 function run(db) {
   const n = importBooks(db, readBooks());
   const u = importUsers(db, USERS);
@@ -216,6 +233,7 @@ function run(db) {
   const l = importLoans(db, LOANS);
   const w = importWaitlist(db, WAITLIST);
   const r = importReviews(db, REVIEWS);
+  importWishlist(db, WISHLIST);
   if (process.env.NODE_ENV !== 'test') {
     console.log('[seed] ' + n + ' books, ' + u + ' users, ' + c + ' copies, ' + l + ' loans, ' + w + ' waiting, ' + r + ' reviews');
   }
@@ -230,6 +248,7 @@ module.exports = {
   importLoans,
   importWaitlist,
   importReviews,
+  importWishlist,
   readBooks,
   ago,
   isoAgo,
@@ -237,5 +256,6 @@ module.exports = {
   DISCOUNT_RULES,
   LOANS,
   WAITLIST,
-  REVIEWS
+  REVIEWS,
+  WISHLIST
 };

@@ -53,6 +53,7 @@ class Header extends React.Component {
             <Link to="/">{t('nav.catalogue')}</Link>
             {user && <Link to="/loans">{t('nav.loans')}</Link>}
             {user && <Link to="/reservations">{t('nav.reservations')}</Link>}
+            {user && <Link to="/wishlist">{t('nav.wishlist')}</Link>}
             {user && user.role === 'admin' && <Link to="/admin/loans">{t('nav.admin')}</Link>}
             {user && <Link to="/cart" className="nav-cart">{t('nav.cart', { count: this.state.count })}</Link>}
             {user ? (

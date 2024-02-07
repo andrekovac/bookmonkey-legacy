@@ -7,7 +7,8 @@
     "cart": "Warenkorb ({count})",
     "login": "Anmelden",
     "logout": "Abmelden",
-    "language": "Sprache"
+    "language": "Sprache",
+    "wishlist": "Merkliste"
   },
   "common": {
     "loading": "Lade...",
@@ -62,5 +63,27 @@
   "price": {
     "onRequest": "Preis auf Anfrage",
     "vat": "inkl. 7 % MwSt."
+  },
+  "wishlist": {
+    "title": "Merkliste",
+    "intro": "Bücher, die du später lesen willst. Ist ein Buch ausgeliehen, kannst du es von hier aus vormerken.",
+    "empty": "Deine Merkliste ist leer.",
+    "add": "Merken",
+    "onList": "Gemerkt",
+    "open": "Zur Merkliste",
+    "note": "Notiz",
+    "noNote": "keine Notiz",
+    "editNote": "Notiz bearbeiten",
+    "removed": "\"{title}\" ist nicht mehr auf der Merkliste.",
+    "reserved": "\"{title}\" ist vorgemerkt, du bist Nr. {position} auf der Warteliste.",
+    "borrowed": "\"{title}\" ausgeliehen, Rückgabe bis {due}.",
+    "availableNow": "jetzt ausleihbar ({count})",
+    "allOut": "alle ausgeliehen",
+    "shopOnly": "nur im Shop",
+    "ready": "liegt für dich bereit",
+    "waiting": "vorgemerkt, Nr. {position}",
+    "addedAt": "gemerkt am {date}",
+    "borrow": "Ausleihen",
+    "reserve": "Vormerken"
   }
 }

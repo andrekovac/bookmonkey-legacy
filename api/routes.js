@@ -219,6 +219,7 @@ router.get('/books/:isbn/availability', function (req, res) {
     out.myReservation = mine ? reservations.withPosition(waitlist.findReservation(mine.id)) : null;
     out.myLoan = db.open().prepare(`SELECT l.id, l.due_at FROM loans l JOIN copies c ON c.id = l.copy_id
       WHERE l.user_id = ? AND c.book_id = ? AND l.returned_at IS NULL`).get(req.session.uid, book.id) || null;
+    out.onWishlist = !!db.open().prepare('SELECT id FROM wishlist WHERE user_id = ? AND book_id = ?').get(req.session.uid, book.id);
   }
   res.json(out);
 });
@@ -635,6 +636,8 @@ router.post('/reservations/link/:token', function (req, res) {
     sendError(res, err);
   }
 });
+
+router.use(moved.wishlist);
 
 // ---------------------------------------------------------------------------
 // admin, everything below needs an admin session

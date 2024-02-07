@@ -1,0 +1,110 @@
+/* Merkliste (2024). Class names: c- = component, u- = utility, is- = state */
+
+.c-wishlist__list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+
+.c-wishlist__item {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #e6ded3;
+}
+
+.c-wishlist__cover {
+  width: 56px;
+  height: 84px;
+  object-fit: cover;
+  margin-right: 14px;
+  border: 1px solid #e6ded3;
+}
+
+.c-wishlist__body {
+  flex: 1;
+}
+
+.c-wishlist__title {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.c-wishlist__state {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+.c-wishlist__added {
+  margin-left: 8px;
+  font-size: 13px;
+}
+
+.c-wishlist__note {
+  font-size: 14px;
+}
+
+.c-wishlist__note input {
+  width: 280px;
+  margin-right: 6px;
+}
+
+.c-wishlist__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.c-wishlist__actions button {
+  margin-bottom: 6px;
+}
+
+.c-wishlist-button {
+  display: inline-block;
+  margin-left: 10px;
+}
+
+.c-wishlist-button__toggle.is-active {
+  background: #f3e7dc;
+}
+
+.c-wishlist-button__link {
+  margin-left: 8px;
+  font-size: 14px;
+}
+
+.c-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  background: #f1e3d3;
+  color: #6b3a1c;
+}
+
+.c-badge--ok {
+  background: #e3f4e1;
+  color: #23621a;
+}
+
+.c-badge--info {
+  background: #e1ecf7;
+  color: #1d4f7a;
+}
+
+.c-badge--muted {
+  background: #eee;
+  color: #777;
+}
+
+.u-muted {
+  color: #8a7f73;
+}
+
+.c-wishlist .link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: #7a3e1d;
+  text-decoration: underline;
+}

@@ -23,6 +23,7 @@ import AdminBooks from './pages/AdminBooks.jsx';
 import ReservationLink from './pages/ReservationLink.jsx';
 import AdminSeries from './pages/AdminSeries.jsx';
 import AdminLookup from './pages/AdminLookup.jsx';
+import Wishlist from './pages/Wishlist.jsx';
 
 export default function AppRoutes() {
   return (
@@ -37,6 +38,7 @@ export default function AppRoutes() {
       <Route path="/loans" element={<Loans />} />
       <Route path="/loans/:id" element={<LoanDetail />} />
       <Route path="/reservations" element={<Reservations />} />
+      <Route path="/wishlist" element={<Wishlist />} />
       <Route path="/reservations/link/:token" element={<ReservationLink />} />
       <Route path="/admin/copies" element={<AdminCopies />} />
       <Route path="/admin/loans" element={<AdminLoans />} />
