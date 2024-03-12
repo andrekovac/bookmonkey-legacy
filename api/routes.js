@@ -146,6 +146,7 @@ router.get('/books', function (req, res) {
 });
 
 router.use(moved.publishers);
+router.use(moved.flags);
 
 function findBook(isbn) {
   return db.open().prepare('SELECT * FROM books WHERE isbn = ?').get(isbn);
