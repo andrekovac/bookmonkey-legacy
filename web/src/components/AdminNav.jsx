@@ -15,6 +15,7 @@ export default function AdminNav() {
       <NavLink to="/admin/users">Nutzer</NavLink>
       <NavLink to="/admin/discounts">Rabatte</NavLink>
       <NavLink to="/admin/outbox">Mails</NavLink>
+      <NavLink to="/admin/flags">Flags</NavLink>
       <a href="/admin-old/" target="_blank" rel="noopener">Bücher (altes Admin)</a>
     </nav>
   );

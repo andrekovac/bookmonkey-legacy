@@ -23,8 +23,10 @@ const inventory = require('./services/inventory');
 const bookService = require('./services/books');
 const series = require('./services/series');
 const ics = require('./lib/ics');
+const logger = require('./lib/logger');
 const moved = require('./routes/index');
 const i18n = require('./lib/i18n');
+const flags = require('./lib/flags');
 
 const router = express.Router();
 
@@ -1067,6 +1069,26 @@ router.get('/admin/reservations', function (req, res) {
     opts.bookId = book.id;
   }
   res.json(reservations.list(opts));
+});
+
+// ---------------------------------------------------------------------------
+// Feature flags (GET /flags for everybody is in routes/flags.js)
+
+router.get('/admin/flags', function (req, res) {
+  res.json(flags.list());
+});
+
+// {enabled: true|false}
+router.put('/admin/flags/:name', function (req, res) {
+  const body = req.body || {};
+  if (typeof body.enabled !== 'boolean') return res.status(400).json({ message: 'enabled must be true or false' });
+  try {
+    const flag = flags.set(req.params.name, body.enabled, req.session.uid);
+    logger.info('[flags] ' + flag.name + ' = ' + flag.enabled + ' by user ' + req.session.uid);
+    res.json(flag);
+  } catch (err) {
+    sendError(res, err);
+  }
 });
 
 router.use(moved.outbox);

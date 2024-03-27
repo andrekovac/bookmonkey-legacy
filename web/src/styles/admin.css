@@ -236,3 +236,20 @@ fieldset {
 .inventory-list--good h3 {
   color: #3d6a2a;
 }
+
+/* on/off switch (flags) */
+
+.c-switch {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.c-switch input {
+  margin-right: 6px;
+}
+
+.c-switch__label {
+  font-size: 13px;
+  min-width: 24px;
+}

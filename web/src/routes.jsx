@@ -24,6 +24,7 @@ import ReservationLink from './pages/ReservationLink.jsx';
 import AdminSeries from './pages/AdminSeries.jsx';
 import AdminLookup from './pages/AdminLookup.jsx';
 import Wishlist from './pages/Wishlist.jsx';
+import AdminFlags from './pages/AdminFlags.jsx';
 
 export default function AppRoutes() {
   return (
@@ -51,6 +52,7 @@ export default function AppRoutes() {
       <Route path="/admin/books" element={<AdminBooks />} />
       <Route path="/admin/series" element={<AdminSeries />} />
       <Route path="/admin/lookup" element={<AdminLookup />} />
+      <Route path="/admin/flags" element={<AdminFlags />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
