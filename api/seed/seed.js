@@ -208,6 +208,54 @@ function importReviews(db, list) {
   return list.length;
 }
 
+// Ausleihhistorie for the reports (2024): returned loans over the last 14 months.
+// Same numbers on every reset (fixed start value), dates relative to today.
+const HISTORY_READERS = [
+  'mia.schulz@example.com', 'jonas.becker@example.com', 'lea.hoffmann@example.com', 'tobias.wagner@example.com',
+  'sarah.klein@example.com', 'murat.yilmaz@example.com', 'anja.richter@example.com', 'nina.vogel@example.com'
+];
+// asked for more often than the rest
+const HISTORY_FAVOURITES = ['9780735211292', '9781455586691', '9780062316097', '9780747532699', '9780547928227', '9780441172719'];
+
+function importLoanHistory(db, months) {
+  let state = 20240417;
+  function next(n) {
+    state = (state * 1103515245 + 12345) % 2147483648;
+    return Math.floor(state / 65536) % n;
+  }
+  const copies = db.prepare('SELECT c.id, b.isbn FROM copies c JOIN books b ON b.id = c.book_id ORDER BY c.id').all();
+  const favourites = copies.filter(c => HISTORY_FAVOURITES.indexOf(isbn.digitsOnly(c.isbn)) !== -1);
+  const users = HISTORY_READERS.map(email => userId(db, email));
+  const insert = db.prepare(`INSERT INTO loans (copy_id, user_id, borrowed_at, due_at, returned_at, renewals, reminder_count)
+    VALUES (?, ?, ?, ?, ?, ?, 0)`);
+  let n = 0;
+  for (let m = months; m >= 1; m--) {
+    // a bit more in winter, less in August
+    const count = 6 + next(7) + (m % 12 === 3 ? -3 : 0);
+    for (let i = 0; i < count; i++) {
+      const copy = next(3) === 0 ? favourites[next(favourites.length)] : copies[next(copies.length)];
+      const borrowedDaysAgo = m * 30 + 15 - next(28);
+      const keptDays = 7 + next(30);
+      const renewals = keptDays > 28 ? 1 : 0;
+      const borrowed = ago(borrowedDaysAgo, '10:' + utils.pad(10 + next(50)) + ':00');
+      insert.run(copy.id, users[next(users.length)], borrowed, utils.addDays(-borrowedDaysAgo + 28 + renewals * 14),
+        ago(borrowedDaysAgo - keptDays, '17:05:00'), renewals);
+      n++;
+    }
+  }
+  return n;
+}
+
+// rows in feature_flags, see lib/flags.js for all flags
+const FLAGS = { ENABLE_REPORTS: true };
+
+function importFlags(db, values) {
+  const insert = db.prepare('INSERT INTO feature_flags (name, enabled, updated_at) VALUES (?, ?, ?)');
+  Object.keys(values).forEach(function (name) {
+    insert.run(name, values[name] ? 1 : 0, utils.now());
+  });
+}
+
 // Merkliste (2024): a few entries so the page is not empty for the test accounts
 const WISHLIST = [
   { email: 'lea.hoffmann@example.com', isbn: '9780441172696', days: 14, note: 'nach Dune' },
@@ -234,8 +282,10 @@ function run(db) {
   const w = importWaitlist(db, WAITLIST);
   const r = importReviews(db, REVIEWS);
   importWishlist(db, WISHLIST);
+  const h = importLoanHistory(db, 14);
+  importFlags(db, FLAGS);
   if (process.env.NODE_ENV !== 'test') {
-    console.log('[seed] ' + n + ' books, ' + u + ' users, ' + c + ' copies, ' + l + ' loans, ' + w + ' waiting, ' + r + ' reviews');
+    console.log('[seed] ' + n + ' books, ' + u + ' users, ' + c + ' copies, ' + (l + h) + ' loans (' + h + ' history), ' + w + ' waiting, ' + r + ' reviews');
   }
 }
 
@@ -249,6 +299,8 @@ module.exports = {
   importWaitlist,
   importReviews,
   importWishlist,
+  importLoanHistory,
+  importFlags,
   readBooks,
   ago,
   isoAgo,
@@ -257,5 +309,6 @@ module.exports = {
   LOANS,
   WAITLIST,
   REVIEWS,
-  WISHLIST
+  WISHLIST,
+  FLAGS
 };

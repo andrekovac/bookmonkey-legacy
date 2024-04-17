@@ -85,5 +85,57 @@
     "addedAt": "gemerkt am {date}",
     "borrow": "Ausleihen",
     "reserve": "Vormerken"
+  },
+  "reports": {
+    "title": "Berichte",
+    "period": "Zeitraum",
+    "months": "{n} Monate",
+    "month": "Monat",
+    "location": "Standort",
+    "allLocations": "alle Standorte",
+    "print": "Drucken",
+    "tabs": {
+      "loans": "Ausleihen pro Monat",
+      "overdue": "Überfällig",
+      "top": "Top-Bücher",
+      "waitlists": "Wartelisten"
+    },
+    "summary": {
+      "openLoans": "offene Ausleihen",
+      "overdue": "überfällig",
+      "loansThisMonth": "Ausleihen diesen Monat",
+      "waiting": "auf Wartelisten"
+    },
+    "loans": {
+      "title": "Ausleihen pro Monat",
+      "loans": "Ausleihen",
+      "returned": "davon zurück",
+      "byLocation": "nach Standort",
+      "total": "{total} Ausleihen im Zeitraum"
+    },
+    "overdue": {
+      "title": "Überfällige Ausleihen",
+      "none": "Nichts überfällig.",
+      "book": "Buch",
+      "reader": "Ausgeliehen von",
+      "due": "fällig am",
+      "days": "Tage",
+      "reminders": "Erinnerungen",
+      "toLoans": "Zu den Ausleihen (Rückgabe an der Theke)"
+    },
+    "top": {
+      "title": "Am meisten ausgeliehen",
+      "numbers": "{loans} Ausleihen, {readers} Personen, {waiting} warten"
+    },
+    "waitlists": {
+      "title": "Wartelisten",
+      "none": "Niemand wartet auf ein Buch.",
+      "waiting": "warten",
+      "ready": "im Abholregal",
+      "copies": "Exemplare",
+      "perCopy": "pro Exemplar",
+      "since": "wartet seit",
+      "hint": "Mehr als 2 Personen pro Exemplar: über ein weiteres Exemplar nachdenken (Neuanschaffung)."
+    }
   }
 }

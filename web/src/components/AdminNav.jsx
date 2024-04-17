@@ -1,7 +1,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import useFlags from '../hooks/useFlags';
 
 export default function AdminNav() {
+  const flags = useFlags();
   return (
     <nav className="admin-nav">
       <NavLink to="/admin/loans">Ausleihen</NavLink>
@@ -14,6 +16,7 @@ export default function AdminNav() {
       <NavLink to="/admin/inventory">Inventur</NavLink>
       <NavLink to="/admin/users">Nutzer</NavLink>
       <NavLink to="/admin/discounts">Rabatte</NavLink>
+      {flags.ENABLE_REPORTS && <NavLink to="/admin/reports">Berichte</NavLink>}
       <NavLink to="/admin/outbox">Mails</NavLink>
       <NavLink to="/admin/flags">Flags</NavLink>
       <a href="/admin-old/" target="_blank" rel="noopener">Bücher (altes Admin)</a>

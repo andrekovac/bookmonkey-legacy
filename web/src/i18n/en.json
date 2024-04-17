@@ -85,5 +85,57 @@
     "addedAt": "added {date}",
     "borrow": "Borrow",
     "reserve": "Reserve"
+  },
+  "reports": {
+    "title": "Reports",
+    "period": "Period",
+    "months": "{n} months",
+    "month": "Month",
+    "location": "Location",
+    "allLocations": "all locations",
+    "print": "Print",
+    "tabs": {
+      "loans": "Loans per month",
+      "overdue": "Overdue",
+      "top": "Top books",
+      "waitlists": "Waiting lists"
+    },
+    "summary": {
+      "openLoans": "open loans",
+      "overdue": "overdue",
+      "loansThisMonth": "loans this month",
+      "waiting": "on waiting lists"
+    },
+    "loans": {
+      "title": "Loans per month",
+      "loans": "Loans",
+      "returned": "returned",
+      "byLocation": "by location",
+      "total": "{total} loans in this period"
+    },
+    "overdue": {
+      "title": "Overdue loans",
+      "none": "Nothing is overdue.",
+      "book": "Book",
+      "reader": "Borrowed by",
+      "due": "due",
+      "days": "days",
+      "reminders": "reminders",
+      "toLoans": "Go to loans (return at the desk)"
+    },
+    "top": {
+      "title": "Most borrowed",
+      "numbers": "{loans} loans, {readers} people, {waiting} waiting"
+    },
+    "waitlists": {
+      "title": "Waiting lists",
+      "none": "Nobody is waiting for a book.",
+      "waiting": "waiting",
+      "ready": "on the hold shelf",
+      "copies": "copies",
+      "perCopy": "per copy",
+      "since": "waiting since",
+      "hint": "More than 2 people per copy: think about buying another copy."
+    }
   }
 }

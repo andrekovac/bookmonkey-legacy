@@ -1,0 +1,161 @@
+/* Berichte (2024). c- = component, u- = utility, is- = state */
+
+.c-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -6px 16px;
+}
+
+.c-tile {
+  flex: 1 1 160px;
+  margin: 0 6px 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #e6ded3;
+  border-radius: 4px;
+}
+
+.c-tile.is-warning {
+  border-color: #d9a69b;
+  background: #fdf3f1;
+}
+
+.c-tile__value {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.c-tile__label {
+  font-size: 13px;
+  color: #6d645b;
+}
+
+.c-reports__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.c-tabs__tab {
+  border-radius: 0;
+  margin-right: -1px;
+}
+
+.c-tabs__tab.is-active {
+  background: #7a3e1d;
+  color: #fff;
+}
+
+.c-reports__months {
+  font-size: 14px;
+  color: #6d645b;
+}
+
+.c-report {
+  margin-bottom: 28px;
+}
+
+.c-report.is-loading {
+  opacity: 0.6;
+}
+
+.c-report__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.c-report__head h2 {
+  margin-right: 16px;
+}
+
+.c-report__head > * {
+  margin-right: 12px;
+}
+
+.c-report__table {
+  margin-top: 12px;
+}
+
+.c-report__table tr.is-late td {
+  background: #fdf3f1;
+}
+
+.c-report__ranking li {
+  margin-bottom: 4px;
+}
+
+.c-report__numbers {
+  margin-left: 8px;
+  font-size: 13px;
+  color: #6d645b;
+}
+
+.c-chart {
+  margin: 8px 0;
+  background: #fff;
+  border: 1px solid #e6ded3;
+  padding: 8px;
+}
+
+.c-chart--empty {
+  color: #8a7f73;
+  text-align: center;
+  padding: 40px;
+}
+
+.c-chart__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.c-chart__tick line {
+  stroke: #eee6dc;
+}
+
+.c-chart__tick text,
+.c-chart__label {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  font-size: 11px;
+  fill: #6d645b;
+}
+
+.c-chart__axis {
+  stroke: #8a7f73;
+}
+
+.c-chart__bar rect:hover {
+  opacity: 0.8;
+}
+
+.c-chart__legend {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.c-chart__legend-item {
+  margin-right: 14px;
+}
+
+.c-chart__swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+@media print {
+  .header,
+  .footer,
+  .admin-nav,
+  .c-tiles,
+  .c-reports__bar,
+  .c-report__print {
+    display: none;
+  }
+}

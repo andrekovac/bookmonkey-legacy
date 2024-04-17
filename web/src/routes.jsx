@@ -25,6 +25,7 @@ import AdminSeries from './pages/AdminSeries.jsx';
 import AdminLookup from './pages/AdminLookup.jsx';
 import Wishlist from './pages/Wishlist.jsx';
 import AdminFlags from './pages/AdminFlags.jsx';
+import AdminReports from './pages/AdminReports.jsx';
 
 export default function AppRoutes() {
   return (
@@ -53,6 +54,7 @@ export default function AppRoutes() {
       <Route path="/admin/series" element={<AdminSeries />} />
       <Route path="/admin/lookup" element={<AdminLookup />} />
       <Route path="/admin/flags" element={<AdminFlags />} />
+      <Route path="/admin/reports" element={<AdminReports />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

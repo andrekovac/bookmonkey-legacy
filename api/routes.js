@@ -1071,6 +1071,8 @@ router.get('/admin/reservations', function (req, res) {
   res.json(reservations.list(opts));
 });
 
+router.use(moved.reports);
+
 // ---------------------------------------------------------------------------
 // Feature flags (GET /flags for everybody is in routes/flags.js)
 
