@@ -5,6 +5,8 @@ const fs = require('fs');
 const isbn = require('../lib/isbn');
 const utils = require('../lib/utils');
 const auth = require('../lib/auth');
+const pricing = require('../lib/pricing');
+const money = require('../lib/money');
 
 function readBooks() {
   const file = path.join(__dirname, 'books.json');
@@ -246,6 +248,56 @@ function importLoanHistory(db, months) {
   return n;
 }
 
+// Bestellungen (kaufen statt leihen), for the revenue report. [email, days ago, status, [isbn, qty]...]
+const ORDERS = [
+  ['mia.schulz@example.com', 400, 'shipped', ['9780735211292', 1], ['9781455586691', 1]],
+  ['jonas.becker@example.com', 380, 'shipped', ['9780812511819', 2]],
+  ['tobias.wagner@example.com', 350, 'shipped', ['9780064404990', 1], ['9780064405010', 1], ['9780064405027', 1]],
+  ['sarah.klein@example.com', 330, 'cancelled', ['9780062316097', 1]],
+  ['murat.yilmaz@example.com', 300, 'shipped', ['9780441172719', 1], ['9780441172696', 1]],
+  ['anja.richter@example.com', 280, 'shipped', ['9780747532699', 2]],
+  ['lea.hoffmann@example.com', 255, 'shipped', ['9780765350381', 1], ['9780765356130', 1], ['9780765356147', 1]],
+  ['mia.schulz@example.com', 230, 'shipped', ['9780374533557', 1]],
+  ['nina.vogel@example.com', 210, 'shipped', ['9780812517729', 1], ['9780812513714', 1]],
+  ['jonas.becker@example.com', 190, 'shipped', ['9780547928227', 3]],
+  ['tobias.wagner@example.com', 160, 'shipped', ['9780439023481', 1], ['9780439023498', 1], ['9780439023511', 1]],
+  ['anja.richter@example.com', 140, 'cancelled', ['9780812513738', 1]],
+  ['sarah.klein@example.com', 120, 'shipped', ['9780756404741', 1], ['9780756407919', 1]],
+  ['murat.yilmaz@example.com', 95, 'shipped', ['9780735211292', 2]],
+  ['lea.hoffmann@example.com', 70, 'shipped', ['9780064405010', 2], ['9780812550306', 1]],
+  ['mia.schulz@example.com', 45, 'paid', ['9780679879244', 1], ['9780679879251', 1], ['9780679879268', 1]],
+  ['nina.vogel@example.com', 20, 'paid', ['9781455586691', 1], ['9780062316097', 1]],
+  ['jonas.becker@example.com', 6, 'new', ['9780786838653', 1], ['9780786856855', 1], ['9781423101451', 1]],
+  ['tobias.wagner@example.com', 2, 'new', ['9780812511819', 1], ['9780064404990', 2]]
+];
+
+// same numbers as POST /orders in routes.js
+function importOrders(db, list) {
+  const rules = pricing.activeRules();
+  const insertOrder = db.prepare(`INSERT INTO orders
+    (user_id, status, payment, total_net, total_gross, ship_name, ship_street, ship_zip, ship_city, note, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)`);
+  const insertItem = db.prepare('INSERT INTO order_items (order_id, book_id, isbn, title, qty, price_net, discount) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  list.forEach(function (o, idx) {
+    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(o[0]);
+    const items = o.slice(3).map(function (it) {
+      const book = db.prepare('SELECT * FROM books WHERE isbn = ?').get(isbn.format(it[0]));
+      const discount = pricing.discountFor(book, rules);
+      return { book: book, qty: it[1], discount: discount, net: pricing.discountedNet(book.price, discount) };
+    });
+    let totalNet = 0;
+    items.forEach(i => { totalNet += i.net * i.qty; });
+    totalNet = money.round(totalNet);
+    const r = insertOrder.run(user.id, o[2], idx % 3 === 0 ? 'prepayment' : 'invoice', totalNet, pricing.gross(totalNet),
+      user.name, 'Musterstraße ' + (idx + 1), user.location === 'Berlin' ? '10115' : user.location === 'München' ? '80331' : '20095',
+      user.location || 'Hamburg', ago(o[1], '11:2' + (idx % 10) + ':00'));
+    items.forEach(function (i) {
+      insertItem.run(Number(r.lastInsertRowid), i.book.id, i.book.isbn, i.book.title, i.qty, i.net, i.discount || null);
+    });
+  });
+  return list.length;
+}
+
 // rows in feature_flags, see lib/flags.js for all flags
 const FLAGS = { ENABLE_REPORTS: true };
 
@@ -284,8 +336,9 @@ function run(db) {
   importWishlist(db, WISHLIST);
   const h = importLoanHistory(db, 14);
   importFlags(db, FLAGS);
+  const o = importOrders(db, ORDERS);
   if (process.env.NODE_ENV !== 'test') {
-    console.log('[seed] ' + n + ' books, ' + u + ' users, ' + c + ' copies, ' + (l + h) + ' loans (' + h + ' history), ' + w + ' waiting, ' + r + ' reviews');
+    console.log('[seed] ' + n + ' books, ' + u + ' users, ' + c + ' copies, ' + (l + h) + ' loans (' + h + ' history), ' + w + ' waiting, ' + r + ' reviews, ' + o + ' orders');
   }
 }
 
@@ -301,6 +354,7 @@ module.exports = {
   importWishlist,
   importLoanHistory,
   importFlags,
+  importOrders,
   readBooks,
   ago,
   isoAgo,
@@ -310,5 +364,6 @@ module.exports = {
   WAITLIST,
   REVIEWS,
   WISHLIST,
-  FLAGS
+  FLAGS,
+  ORDERS
 };

@@ -98,7 +98,8 @@
       "loans": "Ausleihen pro Monat",
       "overdue": "Überfällig",
       "top": "Top-Bücher",
-      "waitlists": "Wartelisten"
+      "waitlists": "Wartelisten",
+      "revenue": "Umsatz"
     },
     "summary": {
       "openLoans": "offene Ausleihen",
@@ -136,6 +137,17 @@
       "perCopy": "pro Exemplar",
       "since": "wartet seit",
       "hint": "Mehr als 2 Personen pro Exemplar: über ein weiteres Exemplar nachdenken (Neuanschaffung)."
+    },
+    "csv": "CSV (Excel)",
+    "revenue": {
+      "title": "Umsatz pro Monat (Shop)",
+      "orders": "Bestellungen",
+      "items": "Bücher",
+      "net": "netto",
+      "vat": "MwSt.",
+      "gross": "brutto",
+      "sum": "Summe",
+      "hint": "Ohne stornierte Bestellungen. Datum = Bestelldatum, nicht Versand."
     }
   }
 }

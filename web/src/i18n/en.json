@@ -98,7 +98,8 @@
       "loans": "Loans per month",
       "overdue": "Overdue",
       "top": "Top books",
-      "waitlists": "Waiting lists"
+      "waitlists": "Waiting lists",
+      "revenue": "Revenue"
     },
     "summary": {
       "openLoans": "open loans",
@@ -136,6 +137,17 @@
       "perCopy": "per copy",
       "since": "waiting since",
       "hint": "More than 2 people per copy: think about buying another copy."
+    },
+    "csv": "CSV (Excel)",
+    "revenue": {
+      "title": "Revenue per month (shop)",
+      "orders": "Orders",
+      "items": "Books",
+      "net": "net",
+      "vat": "VAT",
+      "gross": "gross",
+      "sum": "Total",
+      "hint": "Cancelled orders are not counted. Date = order date, not shipping date."
     }
   }
 }

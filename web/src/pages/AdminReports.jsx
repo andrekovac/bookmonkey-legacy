@@ -4,15 +4,29 @@ import api from '../api/client';
 import AdminOnly from '../components/AdminOnly.jsx';
 import BarChart from '../components/BarChart.jsx';
 import useLanguage from '../hooks/useLanguage';
-import { formatDate } from '../utils/format';
+import { formatDate, formatPrice } from '../utils/format';
 import '../styles/reports.css';
 
-const TABS = ['loans', 'overdue', 'top', 'waitlists'];
+const TABS = ['loans', 'overdue', 'top', 'waitlists', 'revenue'];
 const MONTH_CHOICES = [3, 6, 12, 24];
 
 // "2024-03" -> "03/24" (short enough for the chart axis)
 function shortMonth(m) {
   return m.slice(5, 7) + '/' + m.slice(2, 4);
+}
+
+// same report as CSV (Excel). The API answers with Content-Disposition: attachment
+function CsvLink({ path, query }) {
+  const { t } = useLanguage();
+  const params = new URLSearchParams({ format: 'csv' });
+  Object.keys(query || {}).forEach(k => {
+    if (query[k] !== undefined && query[k] !== '') params.set(k, query[k]);
+  });
+  return (
+    <a className="c-report__csv" href={'/api/v1' + path + '?' + params.toString()} download>
+      {t('reports.csv')}
+    </a>
+  );
 }
 
 function useReport(path, query) {
@@ -70,6 +84,7 @@ function LoansPerMonth({ months }) {
         <label className="toolbar-check">
           <input type="checkbox" checked={split} onChange={e => setSplit(e.target.checked)} /> {t('reports.loans.byLocation')}
         </label>
+        <CsvLink path="/admin/reports/loans-per-month" query={{ months: months }} />
       </div>
       <BarChart
         data={chart}
@@ -119,6 +134,7 @@ function Overdue() {
           <option>München</option>
         </select>
         <button type="button" className="c-report__print" onClick={() => window.print()}>{t('reports.print')}</button>
+        <CsvLink path="/admin/reports/overdue" query={{ location: location }} />
       </div>
       {data.length === 0 ? (
         <div className="empty">{t('reports.overdue.none')}</div>
@@ -160,7 +176,10 @@ function TopBooks({ months }) {
   if (!data) return <div className="loading">{t('common.loading')}</div>;
   return (
     <section className="c-report">
-      <h2>{t('reports.top.title')}</h2>
+      <div className="c-report__head">
+        <h2>{t('reports.top.title')}</h2>
+        <CsvLink path="/admin/reports/top-books" query={{ months: months, limit: 10 }} />
+      </div>
       <BarChart
         data={data.map(b => ({ label: b.title, value: b.loans }))}
         formatLabel={l => (l.length > 12 ? l.slice(0, 11) + '…' : l)}
@@ -189,7 +208,10 @@ function Waitlists() {
   if (!data.length) return <div className="empty">{t('reports.waitlists.none')}</div>;
   return (
     <section className="c-report">
-      <h2>{t('reports.waitlists.title')}</h2>
+      <div className="c-report__head">
+        <h2>{t('reports.waitlists.title')}</h2>
+        <CsvLink path="/admin/reports/waitlists" />
+      </div>
       <table className="admin-table c-report__table">
         <thead>
           <tr>
@@ -215,6 +237,62 @@ function Waitlists() {
         </tbody>
       </table>
       <p className="admin-count">{t('reports.waitlists.hint')}</p>
+    </section>
+  );
+}
+
+function Revenue({ months }) {
+  const { t } = useLanguage();
+  const { data, error } = useReport('/admin/reports/revenue', { months: months });
+  if (error) return <div className="error">{error}</div>;
+  if (!data) return <div className="loading">{t('common.loading')}</div>;
+  return (
+    <section className="c-report">
+      <div className="c-report__head">
+        <h2>{t('reports.revenue.title')}</h2>
+        <CsvLink path="/admin/reports/revenue" query={{ months: months }} />
+      </div>
+      <BarChart
+        data={data.rows.map(r => ({ label: r.month, value: r.gross }))}
+        formatLabel={shortMonth}
+        formatValue={v => formatPrice(v)}
+        title={t('reports.revenue.title')}
+      />
+      <table className="admin-table c-report__table">
+        <thead>
+          <tr>
+            <th>{t('reports.month')}</th>
+            <th className="num">{t('reports.revenue.orders')}</th>
+            <th className="num">{t('reports.revenue.items')}</th>
+            <th className="num">{t('reports.revenue.net')}</th>
+            <th className="num">{t('reports.revenue.vat')}</th>
+            <th className="num">{t('reports.revenue.gross')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.rows.slice().reverse().map(r => (
+            <tr key={r.month}>
+              <td>{r.month}</td>
+              <td className="num">{r.orders}</td>
+              <td className="num">{r.items}</td>
+              <td className="num">{formatPrice(r.net)}</td>
+              <td className="num">{formatPrice(r.vat)}</td>
+              <td className="num">{formatPrice(r.gross)}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>{t('reports.revenue.sum')}</td>
+            <td className="num">{data.total.orders}</td>
+            <td></td>
+            <td className="num">{formatPrice(data.total.net)}</td>
+            <td></td>
+            <td className="num">{formatPrice(data.total.gross)}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <p className="admin-count">{t('reports.revenue.hint')}</p>
     </section>
   );
 }
@@ -252,7 +330,7 @@ export default function AdminReports() {
               </button>
             ))}
           </div>
-          {(tab === 'loans' || tab === 'top') && (
+          {(tab === 'loans' || tab === 'top' || tab === 'revenue') && (
             <label className="c-reports__months">
               {t('reports.period')}{' '}
               <select value={months} onChange={e => setMonths(parseInt(e.target.value, 10))}>
@@ -265,6 +343,7 @@ export default function AdminReports() {
         {tab === 'overdue' && <Overdue />}
         {tab === 'top' && <TopBooks months={months} />}
         {tab === 'waitlists' && <Waitlists />}
+        {tab === 'revenue' && <Revenue months={months} />}
       </div>
     </AdminOnly>
   );

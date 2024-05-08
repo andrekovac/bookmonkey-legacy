@@ -2,6 +2,7 @@
 // Months are "YYYY-MM" in local time, like the timestamps in the tables.
 const db = require('../db');
 const utils = require('../lib/utils');
+const money = require('../lib/money');
 
 const DEFAULT_MONTHS = 12;
 const MAX_MONTHS = 36;
@@ -163,6 +164,44 @@ function waitlists() {
   });
 }
 
+// Umsatz pro Monat from the shop orders (kaufen statt leihen). Cancelled orders do not count.
+// [{ month, orders, items, net, gross, vat }]
+function revenuePerMonth(query) {
+  const months = range(query);
+  const rows = db.open().prepare(`SELECT substr(o.created_at, 1, 7) AS month,
+      COUNT(*) AS orders,
+      SUM(o.total_net) AS net,
+      SUM(o.total_gross) AS gross,
+      SUM((SELECT SUM(qty) FROM order_items i WHERE i.order_id = o.id)) AS items
+    FROM orders o
+    WHERE o.status <> 'cancelled' AND o.created_at >= ? AND o.created_at < ?
+    GROUP BY month`).all(firstDay(months[0]), endOf(months[months.length - 1]));
+  const byMonth = {};
+  rows.forEach(function (r) {
+    byMonth[r.month] = r;
+  });
+  const out = months.map(function (m) {
+    const r = byMonth[m] || { orders: 0, items: 0, net: 0, gross: 0 };
+    return {
+      month: m,
+      orders: r.orders,
+      items: r.items || 0,
+      net: money.round(r.net || 0),
+      gross: money.round(r.gross || 0),
+      vat: money.round((r.gross || 0) - (r.net || 0))
+    };
+  });
+  return {
+    months: months,
+    rows: out,
+    total: {
+      orders: out.reduce((n, r) => n + r.orders, 0),
+      net: money.round(out.reduce((n, r) => n + r.net, 0)),
+      gross: money.round(out.reduce((n, r) => n + r.gross, 0))
+    }
+  };
+}
+
 // the four numbers on top of the reports page
 function summary() {
   const conn = db.open();
@@ -186,5 +225,6 @@ module.exports = {
   overdue,
   topBooks,
   waitlists,
+  revenuePerMonth,
   summary
 };

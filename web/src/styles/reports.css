@@ -159,3 +159,8 @@
     display: none;
   }
 }
+
+.c-report__csv {
+  font-size: 14px;
+  margin-left: auto;
+}
