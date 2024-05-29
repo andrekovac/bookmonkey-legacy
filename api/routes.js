@@ -27,6 +27,8 @@ const logger = require('./lib/logger');
 const moved = require('./routes/index');
 const i18n = require('./lib/i18n');
 const flags = require('./lib/flags');
+const csv = require('./lib/csv');
+const exporter = require('./services/export');
 
 const router = express.Router();
 
@@ -678,6 +680,12 @@ router.put('/books/:isbn', function (req, res) {
   if (errors.length) return res.status(400).json({ error: errors.join(', ') });
 
   res.json(toBook(bookService.update(existing, body)));
+});
+
+// Bücher als CSV (Excel), ?publisher=...&copies=1
+router.get('/admin/export/books.csv', function (req, res) {
+  const rows = exporter.books({ publisher: req.query.publisher, onlyWithCopies: !!req.query.copies });
+  csv.send(res, exporter.booksFilename(), rows, exporter.BOOK_COLUMNS);
 });
 
 router.get('/admin/orders', function (req, res) {

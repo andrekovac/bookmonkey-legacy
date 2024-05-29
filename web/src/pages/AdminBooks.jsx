@@ -102,6 +102,13 @@ export default function AdminBooks() {
             </select>
             <button type="submit">Suchen</button>
             <Link className="admin-tabs__job" to="/admin/acquisition">+ Neuanschaffung</Link>
+            <a
+              className="admin-tabs__job"
+              href={'/api/v1/admin/export/books.csv' + (publisher ? '?publisher=' + encodeURIComponent(publisher) : '')}
+              download
+            >
+              Export (CSV)
+            </a>
           </form>
 
           {error && <div className="error">{error}</div>}
