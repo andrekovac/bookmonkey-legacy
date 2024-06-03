@@ -27,6 +27,8 @@ function books(opts) {
   return db.open().prepare(sql).all(...params).map(function (row) {
     const rule = pricing.bestRule(row, rules);
     const discount = rule ? rule.percent / 100 : 0;
+    // Neuanschaffungen without a price yet (acquisition form allows an empty price)
+    const hasPrice = row.price !== null && row.price !== undefined;
     return {
       isbn: row.isbn,
       title: row.title,
@@ -34,11 +36,11 @@ function books(opts) {
       publisher: row.publisher,
       published_at: row.published_at,
       num_pages: row.num_pages,
-      price_net: row.price.toFixed(2),
+      price_net: hasPrice ? row.price.toFixed(2) : '',
       discount: discount ? Math.round(discount * 100) + ' %' : '',
       discount_name: rule ? rule.name : '',
       // Brutto, so wie es im Katalog steht
-      price_gross: row.price * (1 - discount) * (1 + pricing.VAT_BOOKS),
+      price_gross: hasPrice ? row.price * (1 - discount) * (1 + pricing.VAT_BOOKS) : '',
       currency: row.currency,
       copies: row.copies,
       loans: row.loans
