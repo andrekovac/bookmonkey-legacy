@@ -146,8 +146,25 @@ router.get('/books', function (req, res) {
   params.push(limit, offset);
 
   const rows = db.open().prepare(sql).all(...params);
+  // json-server convention, pagers (web, mobile app) read it to know the number of pages
+  res.set('X-Total-Count', String(totalBooks(req.query)));
   res.json(rows.map(toBook));
 });
+
+// number of books for X-Total-Count, same filters as the list
+function totalBooks(query) {
+  const where = [];
+  const params = [];
+  if (query.publisher) {
+    where.push('publisher = ?');
+    params.push(query.publisher);
+  }
+  if (query.available) {
+    where.push("EXISTS (SELECT 1 FROM copies c WHERE c.book_id = books.id AND c.status = 'available')");
+  }
+  const sql = 'SELECT COUNT(*) AS n FROM books' + (where.length ? ' WHERE ' + where.join(' AND ') : '');
+  return db.open().prepare(sql).get(...params).n;
+}
 
 router.use(moved.publishers);
 router.use(moved.flags);

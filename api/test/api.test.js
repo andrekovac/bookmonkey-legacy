@@ -32,6 +32,14 @@ test('lists books', async function () {
   assert.ok(books[0].title);
 });
 
+test('X-Total-Count has the number of all matching books', async function () {
+  const all = await fetch(base + '/books?_limit=5');
+  assert.strictEqual(all.headers.get('X-Total-Count'), '50');
+  const tor = await fetch(base + '/books?publisher=Tor%20Books&_limit=2');
+  assert.strictEqual((await tor.json()).length, 2);
+  assert.strictEqual(tor.headers.get('X-Total-Count'), '8');
+});
+
 test('search by title', async function () {
   const res = await fetch(base + '/books?q=potter&_limit=50');
   const books = await res.json();
