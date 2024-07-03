@@ -286,3 +286,30 @@ textarea {
   background: #fff;
   color: #7a3e1d;
 }
+
+/* pager with page numbers (2024) */
+
+.c-pager__pages {
+  margin: 0 10px;
+}
+
+.c-pager__page {
+  border-color: transparent;
+  padding: 4px 9px;
+  margin: 0 1px;
+}
+
+.c-pager__page.is-current {
+  border-color: #7a3e1d;
+  font-weight: bold;
+}
+
+.c-pager__gap {
+  padding: 0 4px;
+  color: #8a7f73;
+}
+
+.c-pager__info {
+  margin-left: 14px;
+  font-size: 13px;
+}

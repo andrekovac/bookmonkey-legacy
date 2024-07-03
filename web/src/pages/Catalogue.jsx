@@ -3,6 +3,7 @@ import xhr from '../api/xhr';
 import BookCard from '../components/BookCard.jsx';
 import SearchBox from '../components/SearchBox.jsx';
 import PublisherFilter from '../components/PublisherFilter.jsx';
+import Pager from '../components/Pager.jsx';
 import withRouter from '../components/withRouter.jsx';
 import { t } from '../i18n';
 
@@ -32,15 +33,14 @@ class Catalogue extends React.Component {
   constructor(props) {
     super(props);
     this.state = Object.assign(
-      { books: [], loading: true, error: null },
+      { books: [], total: null, loading: true, error: null },
       readQuery(props.location.search)
     );
     this.onSearch = this.onSearch.bind(this);
     this.onPublisher = this.onPublisher.bind(this);
     this.onSort = this.onSort.bind(this);
     this.onAvailable = this.onAvailable.bind(this);
-    this.prevPage = this.prevPage.bind(this);
-    this.nextPage = this.nextPage.bind(this);
+    this.onPage = this.onPage.bind(this);
   }
 
   componentDidMount() {
@@ -70,13 +70,14 @@ class Catalogue extends React.Component {
     };
     if (this.req) this.req.abort();
     this.setState({ loading: true, error: null });
-    this.req = xhr.get('/books' + xhr.query(params), (err, books) => {
+    this.req = xhr.get('/books' + xhr.query(params), (err, books, req) => {
       this.req = null;
       if (err) {
         this.setState({ loading: false, error: err.message });
         return;
       }
-      this.setState({ loading: false, books: books });
+      const total = parseInt(req.getResponseHeader('X-Total-Count'), 10);
+      this.setState({ loading: false, books: books, total: isNaN(total) ? null : total });
     });
   }
 
@@ -108,16 +109,14 @@ class Catalogue extends React.Component {
     this.update({ available: e.target.checked, page: 1 });
   }
 
-  prevPage() {
-    if (this.state.page > 1) this.update({ page: this.state.page - 1 });
-  }
-
-  nextPage() {
-    if (this.state.books.length === PAGE_SIZE) this.update({ page: this.state.page + 1 });
+  onPage(page) {
+    if (page < 1) return;
+    this.update({ page: page });
+    window.scrollTo(0, 0);
   }
 
   render() {
-    const { books, loading, error, page, q, publisher, sort, available } = this.state;
+    const { books, total, loading, error, page, q, publisher, sort, available } = this.state;
     return (
       <div className="catalogue">
         <h1>{t('catalogue.title')}</h1>
@@ -141,11 +140,7 @@ class Catalogue extends React.Component {
         <div className="book-grid">
           {books.map(book => <BookCard key={book.isbn} book={book} />)}
         </div>
-        <div className="pager">
-          <button onClick={this.prevPage} disabled={page <= 1}>&laquo; zurück</button>
-          <span className="pager-page">{t('catalogue.page', { page: page })}</span>
-          <button onClick={this.nextPage} disabled={books.length < PAGE_SIZE}>weiter &raquo;</button>
-        </div>
+        <Pager page={page} total={total} pageSize={PAGE_SIZE} onPage={this.onPage} hasMore={books.length === PAGE_SIZE} />
       </div>
     );
   }

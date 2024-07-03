@@ -149,5 +149,9 @@
       "sum": "Total",
       "hint": "Cancelled orders are not counted. Date = order date, not shipping date."
     }
+  },
+  "pager": {
+    "label": "Pages",
+    "info": "{total} books, {pages} pages"
   }
 }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../api/client';
 import AdminOnly from '../components/AdminOnly.jsx';
 import BookForm from '../components/BookForm.jsx';
+import Pager from '../components/Pager.jsx';
 import { formatDate, formatPrice } from '../utils/format';
 import '../styles/admin-books.css';
 
@@ -30,6 +31,7 @@ function SortHeader({ column, sort, onSort }) {
 // Bücher im neuen Admin. Replaces the books part of /admin-old step by step.
 export default function AdminBooks() {
   const [books, setBooks] = useState([]);
+  const [total, setTotal] = useState(null);
   const [publishers, setPublishers] = useState([]);
   const [q, setQ] = useState('');
   const [publisher, setPublisher] = useState('');
@@ -44,9 +46,14 @@ export default function AdminBooks() {
     setLoading(true);
     setError(null);
     return api.get('/books', {
-      query: { q: q, publisher: publisher, _sort: sort.key, _order: sort.order, _page: page, _limit: PAGE_SIZE }
+      query: { q: q, publisher: publisher, _sort: sort.key, _order: sort.order, _page: page, _limit: PAGE_SIZE },
+      raw: true
     })
-      .then(setBooks)
+      .then(({ data, res }) => {
+        setBooks(data);
+        const n = parseInt(res.headers.get('X-Total-Count'), 10);
+        setTotal(isNaN(n) ? null : n);
+      })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }
@@ -143,9 +150,7 @@ export default function AdminBooks() {
           </table>
 
           <div className="books-admin__pager">
-            <button disabled={page <= 1} onClick={() => setPage(page - 1)}>« zurück</button>
-            <span className="admin-count">Seite {page}</span>
-            <button disabled={books.length < PAGE_SIZE} onClick={() => setPage(page + 1)}>weiter »</button>
+            <Pager page={page} total={total} pageSize={PAGE_SIZE} onPage={setPage} hasMore={books.length === PAGE_SIZE} />
           </div>
         </div>
 

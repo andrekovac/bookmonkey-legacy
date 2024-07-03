@@ -1,10 +1,11 @@
-// formatting helpers for the shop (german locale)
+// formatting helpers for the shop. German by default, English when switched in the header
+import { locale } from '../i18n';
 
 export function formatDate(value) {
   if (!value) return '';
   const d = new Date(value);
   if (isNaN(d.getTime())) return value;
-  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 export function joinAuthors(author, coAuthors) {
@@ -15,5 +16,5 @@ export function joinAuthors(author, coAuthors) {
 
 export function formatPrice(value, currency) {
   if (value === null || value === undefined || value === '') return '';
-  return Number(value).toLocaleString('de-DE', { style: 'currency', currency: currency || 'EUR' });
+  return Number(value).toLocaleString(locale(), { style: 'currency', currency: currency || 'EUR' });
 }

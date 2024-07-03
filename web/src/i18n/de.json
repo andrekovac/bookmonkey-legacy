@@ -149,5 +149,9 @@
       "sum": "Summe",
       "hint": "Ohne stornierte Bestellungen. Datum = Bestelldatum, nicht Versand."
     }
+  },
+  "pager": {
+    "label": "Seiten",
+    "info": "{total} Bücher, {pages} Seiten"
   }
 }
