@@ -153,5 +153,12 @@
   "pager": {
     "label": "Pages",
     "info": "{total} books, {pages} pages"
+  },
+  "search": {
+    "label": "Search",
+    "placeholder": "Title, author or keyword...",
+    "clear": "Clear search",
+    "sort": "Sort",
+    "results": "Results for \"{q}\""
   }
 }

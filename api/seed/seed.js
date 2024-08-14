@@ -299,7 +299,7 @@ function importOrders(db, list) {
 }
 
 // rows in feature_flags, see lib/flags.js for all flags
-const FLAGS = { ENABLE_REPORTS: true };
+const FLAGS = { ENABLE_REPORTS: true, ENABLE_NEW_SEARCH: true };
 
 function importFlags(db, values) {
   const insert = db.prepare('INSERT INTO feature_flags (name, enabled, updated_at) VALUES (?, ?, ?)');

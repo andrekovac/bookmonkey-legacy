@@ -29,6 +29,7 @@ const i18n = require('./lib/i18n');
 const flags = require('./lib/flags');
 const csv = require('./lib/csv');
 const exporter = require('./services/export');
+const search = require('./services/search');
 
 const router = express.Router();
 
@@ -123,9 +124,11 @@ router.get('/books', function (req, res) {
 
   const where = [];
   const params = [];
-  if (req.query.q) {
-    where.push('(title LIKE ? OR author LIKE ?)');
-    params.push('%' + req.query.q + '%', '%' + req.query.q + '%');
+  // title, subtitle, author and description, every word has to match (services/search.js)
+  const term = req.query.q ? search.where(req.query.q) : null;
+  if (term) {
+    where.push(term.sql);
+    params.push(...term.params);
   }
   if (req.query.publisher) {
     where.push('publisher = ?');
@@ -148,7 +151,14 @@ router.get('/books', function (req, res) {
   const rows = db.open().prepare(sql).all(...params);
   // json-server convention, pagers (web, mobile app) read it to know the number of pages
   res.set('X-Total-Count', String(totalBooks(req.query)));
-  res.json(rows.map(toBook));
+  if (!term) return res.json(rows.map(toBook));
+  // search: tell the list where the hit is
+  res.json(rows.map(function (row) {
+    const book = toBook(row);
+    book.matchedIn = search.matchedIn(row, req.query.q);
+    book.snippet = book.matchedIn === 'abstract' ? search.snippet(row.abstract, req.query.q) : null;
+    return book;
+  }));
 });
 
 // number of books for X-Total-Count, same filters as the list

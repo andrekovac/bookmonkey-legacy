@@ -1,0 +1,55 @@
+/* neue Suche (2024). c- = component, u- = utility, is- = state */
+
+.c-search__box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.c-search__input {
+  width: 320px;
+  padding-right: 28px;
+}
+
+.c-search__clear {
+  position: absolute;
+  right: 4px;
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  color: #8a7f73;
+}
+
+.c-search__clear:hover {
+  color: #2b2b2b;
+  background: transparent;
+}
+
+.c-search__status {
+  min-height: 22px;
+  font-size: 14px;
+}
+
+.c-search__hit {
+  display: flex;
+  flex-direction: column;
+}
+
+.c-search__snippet {
+  font-size: 13px;
+  color: #6d645b;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.c-search__snippet mark {
+  background: #f6e3b4;
+  color: inherit;
+  padding: 0 1px;
+}
+
+.u-muted {
+  color: #8a7f73;
+}

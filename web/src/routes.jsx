@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Catalogue from './pages/Catalogue.jsx';
+import CatalogueSwitch from './components/CatalogueSwitch.jsx';
 import Detail from './pages/Detail.jsx';
 import Login from './pages/Login.jsx';
 import Cart from './pages/Cart.jsx';
@@ -30,7 +30,7 @@ import AdminReports from './pages/AdminReports.jsx';
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Catalogue />} />
+      <Route path="/" element={<CatalogueSwitch />} />
       <Route path="/books/:isbn" element={<Detail />} />
       <Route path="/login" element={<Login />} />
       <Route path="/cart" element={<Cart />} />

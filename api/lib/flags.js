@@ -10,7 +10,8 @@ const utils = require('./utils');
 
 // every flag the code knows about. Unknown names are rejected by set().
 const DEFAULTS = {
-  ENABLE_REPORTS: { enabled: false, description: 'Berichte im Admin (Ausleihen pro Monat, Überfällige, Top-Bücher)' }
+  ENABLE_REPORTS: { enabled: false, description: 'Berichte im Admin (Ausleihen pro Monat, Überfällige, Top-Bücher)' },
+  ENABLE_NEW_SEARCH: { enabled: false, description: 'Neue Suche im Katalog: Ergebnisse beim Tippen, sucht auch in der Beschreibung' }
 };
 
 const CACHE_MS = 5000;
