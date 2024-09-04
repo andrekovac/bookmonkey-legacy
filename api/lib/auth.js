@@ -49,7 +49,8 @@ function publicUser(user) {
     role: user.role,
     location: user.location || null,
     department: user.department || null,
-    language: user.language || 'de'
+    language: user.language || 'de',
+    notify: user.notify || 'mail'
   };
 }
 

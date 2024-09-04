@@ -5,6 +5,17 @@ const utils = require('./utils');
 const logger = require('./logger');
 
 const FROM = process.env.MAIL_FROM || 'bibliothek@bookmonkey.example';
+
+// mails a user can switch off in the profile (users.notify = 'none').
+// Reminders for overdue books and the mails to admins always go out.
+const OPTIONAL_KINDS = ['due_soon', 'hold_ready', 'hold_expired'];
+const NOTIFY_OPTIONS = ['mail', 'none'];
+
+function wantsMail(userId, kind) {
+  if (!userId || OPTIONAL_KINDS.indexOf(kind) === -1) return true;
+  const user = db.open().prepare('SELECT notify FROM users WHERE id = ?').get(userId);
+  return !user || user.notify !== 'none';
+}
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5180';
 
 // msg: { to, userId, subject, body, kind, refId }
@@ -14,10 +25,12 @@ function send(msg) {
     return null;
   }
   const body = msg.body + '\n\n-- \nBookMonkey Bibliothek\n' + BASE_URL + '\n(Absender: ' + FROM + ')';
+  // kept in the outbox as 'skipped', so the library team can see why somebody got nothing
+  const status = wantsMail(msg.userId, msg.kind) ? 'pending' : 'skipped';
   const r = db.open().prepare(`INSERT INTO outbox (user_id, to_email, subject, body, kind, ref_id, status, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`)
-    .run(msg.userId || null, msg.to, msg.subject, body, msg.kind || null, msg.refId || null, utils.now());
-  logger.info('[mail] ' + (msg.kind || 'mail') + ' -> ' + msg.to + ': ' + msg.subject);
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+    .run(msg.userId || null, msg.to, msg.subject, body, msg.kind || null, msg.refId || null, status, utils.now());
+  logger.info('[mail] ' + (msg.kind || 'mail') + ' -> ' + msg.to + ': ' + msg.subject + (status === 'skipped' ? ' (skipped, user wants no mails)' : ''));
   return Number(r.lastInsertRowid);
 }
 
@@ -47,4 +60,4 @@ function admins() {
   return db.open().prepare("SELECT * FROM users WHERE role = 'admin' ORDER BY id").all();
 }
 
-module.exports = { send, wasSent, list, markSent, admins, BASE_URL, FROM };
+module.exports = { send, wasSent, wantsMail, list, markSent, admins, BASE_URL, FROM, OPTIONAL_KINDS, NOTIFY_OPTIONS };

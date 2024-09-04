@@ -160,5 +160,18 @@
     "clear": "Clear search",
     "sort": "Sort",
     "results": "Results for \"{q}\""
+  },
+  "settings": {
+    "title": "Notifications and language",
+    "notify": "Mails from the library",
+    "notifyMail": "by mail (due soon, reservation ready, reservation expired)",
+    "notifyNone": "no mails",
+    "notifyHint": "You always get reminders for overdue books.",
+    "language": "Language of the site and the mails",
+    "saved": "Settings saved."
+  },
+  "languages": {
+    "de": "Deutsch",
+    "en": "English"
   }
 }

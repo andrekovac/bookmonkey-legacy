@@ -404,6 +404,13 @@ router.put('/auth/me', auth.requireLogin, function (req, res) {
     }
     db.open().prepare('UPDATE users SET language = ? WHERE id = ?').run(body.language, user.id);
   }
+  // Benachrichtigungen: mail | none
+  if (body.notify !== undefined) {
+    if (mailer.NOTIFY_OPTIONS.indexOf(body.notify) === -1) {
+      return res.status(400).json({ error: 'notify must be one of ' + mailer.NOTIFY_OPTIONS.join(', ') });
+    }
+    db.open().prepare('UPDATE users SET notify = ? WHERE id = ?').run(body.notify, user.id);
+  }
   res.json(auth.publicUser(auth.findUser(user.id)));
 });
 

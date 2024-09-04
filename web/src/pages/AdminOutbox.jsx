@@ -28,6 +28,7 @@ export default function AdminOutbox() {
           <option value="pending">noch nicht verschickt</option>
           <option value="sent">verschickt</option>
           <option value="failed">fehlgeschlagen</option>
+          <option value="skipped">nicht gewünscht (Profil)</option>
         </select>
         <span className="admin-count">{mails.length} Mails</span>
       </div>

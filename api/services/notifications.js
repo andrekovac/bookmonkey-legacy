@@ -1,5 +1,8 @@
-// Texts of all library mails. German only, the employees are all in DE.
+// Texts of all library mails. German, due_soon and hold_ready also in English (2024) for
+// people who switched the web app to English. The rest follows when somebody asks.
 const mailer = require('../lib/mailer');
+const db = require('../db');
+const i18n = require('../lib/i18n');
 
 function d(value) {
   if (!value) return '';
@@ -7,8 +10,13 @@ function d(value) {
   return p[2] + '.' + p[1] + '.' + p[0];
 }
 
-function hello(name) {
-  return 'Hallo ' + (name || '') + ',';
+function hello(name, lang) {
+  return (lang === 'en' ? 'Hello ' : 'Hallo ') + (name || '') + ',';
+}
+
+function languageOf(userId) {
+  if (!userId) return i18n.DEFAULT_LANGUAGE;
+  return i18n.languageOf(db.open().prepare('SELECT language FROM users WHERE id = ?').get(userId));
 }
 
 function link(path) {
@@ -25,6 +33,25 @@ function mailLink(kind, r) {
 
 // 2 days before the due date
 function dueSoon(loan) {
+  if (languageOf(loan.user_id) === 'en') {
+    return mailer.send({
+      to: loan.email,
+      userId: loan.user_id,
+      kind: 'due_soon',
+      refId: loan.id,
+      subject: 'Due soon: ' + loan.title,
+      body: [
+        hello(loan.user_name, 'en'),
+        '',
+        'please return "' + loan.title + '" (copy ' + loan.barcode + ') by ' + d(loan.due_at) + '.',
+        loan.renewals < 2
+          ? 'You can also renew it: ' + link('/loans')
+          : 'It cannot be renewed again.',
+        '',
+        'Thank you!'
+      ].join('\n')
+    });
+  }
   return mailer.send({
     to: loan.email,
     userId: loan.user_id,
@@ -100,6 +127,26 @@ function time(value) {
 
 // copy is on the hold shelf
 function holdReady(r) {
+  if (languageOf(r.user_id) === 'en') {
+    return mailer.send({
+      to: r.email,
+      userId: r.user_id,
+      kind: 'hold_ready',
+      refId: r.id,
+      subject: 'Your reserved book is here: ' + r.title,
+      body: [
+        hello(r.user_name, 'en'),
+        '',
+        '"' + r.title + '" is waiting for you on the hold shelf in ' + (r.copy_location || 'the library') + ' (copy ' + r.barcode + ').',
+        'Please pick it up by ' + time(r.expires_at).replace(' Uhr', '') + ', after that it goes to the next person on the waiting list.',
+        '',
+        'Borrow: ' + link('/books/' + r.isbn),
+        '',
+        'You do not need the book any more? Please release it here, so the next person gets it:',
+        mailLink('decline', r)
+      ].join('\n')
+    });
+  }
   return mailer.send({
     to: r.email,
     userId: r.user_id,

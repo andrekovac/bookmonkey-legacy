@@ -160,5 +160,18 @@
     "clear": "Suche löschen",
     "sort": "Sortierung",
     "results": "Ergebnisse für \"{q}\""
+  },
+  "settings": {
+    "title": "Benachrichtigungen und Sprache",
+    "notify": "Mails von der Bibliothek",
+    "notifyMail": "per Mail (Rückgabe bald fällig, Vormerkung liegt bereit, Vormerkung abgelaufen)",
+    "notifyNone": "keine Mails",
+    "notifyHint": "Erinnerungen für überfällige Bücher bekommst du immer.",
+    "language": "Sprache der Seite und der Mails",
+    "saved": "Einstellungen gespeichert."
+  },
+  "languages": {
+    "de": "Deutsch",
+    "en": "English"
   }
 }

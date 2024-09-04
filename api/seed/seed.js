@@ -51,7 +51,7 @@ const USERS = [
   { email: 'jonas.becker@example.com', password: 'jonas2021', name: 'Jonas Becker', role: 'customer', location: 'Hamburg', department: 'Vertrieb' },
   { email: 'lea.hoffmann@example.com', password: 'buecher', name: 'Lea Hoffmann', role: 'customer', location: 'Berlin', department: 'IT' },
   { email: 'bibliothek@bookmonkey.example', password: 'regal2022', name: 'Team Bibliothek', role: 'admin', location: 'Hamburg' },
-  { email: 'tobias.wagner@example.com', password: 'tobias2022', name: 'Tobias Wagner', role: 'customer', location: 'Hamburg', department: 'Vertrieb' },
+  { email: 'tobias.wagner@example.com', password: 'tobias2022', name: 'Tobias Wagner', role: 'customer', location: 'Hamburg', department: 'Vertrieb', notify: 'none' },
   { email: 'sarah.klein@example.com', password: 'klein2022', name: 'Sarah Klein', role: 'customer', location: 'Berlin', department: 'IT' },
   { email: 'murat.yilmaz@example.com', password: 'murat2022', name: 'Murat Yilmaz', role: 'customer', location: 'Hamburg', department: 'Einkauf' },
   { email: 'anja.richter@example.com', password: 'anja2022', name: 'Anja Richter', role: 'customer', location: 'München', department: 'Personal' },
@@ -61,11 +61,11 @@ const USERS = [
 ];
 
 function importUsers(db, users) {
-  const insert = db.prepare('INSERT INTO users (email, password, name, role, location, department, language, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  const insert = db.prepare('INSERT INTO users (email, password, name, role, location, department, language, notify, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
   users.forEach(function (u) {
     // old accounts keep their md5 hash, same as in production
     const hash = u.bcrypt ? auth.hashPassword(u.password) : auth.legacyHash(u.password);
-    insert.run(u.email, hash, u.name, u.role, u.location || null, u.department || null, u.language || 'de', utils.now());
+    insert.run(u.email, hash, u.name, u.role, u.location || null, u.department || null, u.language || 'de', u.notify || 'mail', utils.now());
   });
   return users.length;
 }
