@@ -1,76 +1,73 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import withRouter from '../components/withRouter.jsx';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import * as session from '../session';
-import { t } from '../i18n';
+import useLanguage from '../hooks/useLanguage';
 
-class Login extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { email: '', password: '', error: null, busy: false };
-    this.onSubmit = this.onSubmit.bind(this);
-  }
+// only local redirects
+function nextUrl(search) {
+  const next = new URLSearchParams(search).get('next');
+  return next && next.charAt(0) === '/' && next.charAt(1) !== '/' ? next : '/';
+}
 
-  nextUrl() {
-    const params = new URLSearchParams(this.props.location.search);
-    const next = params.get('next');
-    // only local redirects
-    return next && next.charAt(0) === '/' ? next : '/';
-  }
+export default function Login() {
+  const { t } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
 
-  onSubmit(e) {
+  function onSubmit(e) {
     e.preventDefault();
-    if (!this.state.email || !this.state.password) {
-      this.setState({ error: t('login.missing') });
+    if (!email || !password) {
+      setError(t('login.missing'));
       return;
     }
-    this.setState({ busy: true, error: null });
-    session.login(this.state.email, this.state.password, (err) => {
+    setBusy(true);
+    setError(null);
+    session.login(email, password, err => {
       if (err) {
-        this.setState({
-          busy: false,
-          error: err.status === 401 ? t('login.wrong') : err.message
-        });
+        setBusy(false);
+        setError(err.status === 401 ? t('login.wrong') : err.message);
         return;
       }
-      this.props.navigate(this.nextUrl());
+      navigate(nextUrl(location.search));
     });
   }
 
-  render() {
-    return (
-      <div className="login">
-        <h1>{t('login.title')}</h1>
-        <form onSubmit={this.onSubmit} className="form">
-          {this.state.error && <div className="error">{this.state.error}</div>}
-          <label>
-            {t('login.email')}
-            <input
-              type="email"
-              value={this.state.email}
-              autoComplete="username"
-              onChange={e => this.setState({ email: e.target.value })}
-            />
-          </label>
-          <label>
-            {t('login.password')}
-            <input
-              type="password"
-              value={this.state.password}
-              autoComplete="current-password"
-              onChange={e => this.setState({ password: e.target.value })}
-            />
-          </label>
-          <button type="submit" className="primary" disabled={this.state.busy}>
-            {this.state.busy ? t('login.busy') : t('login.submit')}
-          </button>
-        </form>
-        <p>
-          {t('login.newHere')} <Link to="/register">{t('login.register')}</Link>
-        </p>
-      </div>
-    );
-  }
+  return (
+    <div className="login">
+      <h1>{t('login.title')}</h1>
+      <form onSubmit={onSubmit} className="form" noValidate>
+        {error && <div className="error" role="alert">{error}</div>}
+        <label>
+          {t('login.email')}
+          <input
+            type="email"
+            value={email}
+            autoComplete="username"
+            aria-invalid={!!error}
+            onChange={e => setEmail(e.target.value)}
+          />
+        </label>
+        <label>
+          {t('login.password')}
+          <input
+            type="password"
+            value={password}
+            autoComplete="current-password"
+            aria-invalid={!!error}
+            onChange={e => setPassword(e.target.value)}
+          />
+        </label>
+        <button type="submit" className="primary" disabled={busy}>
+          {busy ? t('login.busy') : t('login.submit')}
+        </button>
+      </form>
+      <p>
+        {t('login.newHere')} <Link to="/register">{t('login.register')}</Link>
+      </p>
+    </div>
+  );
 }
-
-export default withRouter(Login);

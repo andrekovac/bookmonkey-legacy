@@ -173,5 +173,9 @@
   "languages": {
     "de": "Deutsch",
     "en": "English"
+  },
+  "a11y": {
+    "skip": "Zum Inhalt springen",
+    "mainNav": "Hauptnavigation"
   }
 }

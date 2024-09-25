@@ -26,8 +26,9 @@ class App extends React.Component {
   render() {
     return (
       <BrowserRouter>
+        <a href="#main" className="u-skip-link">{t('a11y.skip')}</a>
         <Header />
-        <main className="container">
+        <main className="container" id="main" tabIndex="-1">
           {/* key: the class pages read t() in render only, a new key renders them again in the new language */}
           <ErrorBoundary key={this.state.lang}>
             <AppRoutes />

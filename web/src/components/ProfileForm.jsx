@@ -1,86 +1,100 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import xhr from '../api/xhr';
 import * as session from '../session';
 
-class ProfileForm extends React.Component {
-  constructor(props) {
-    super(props);
-    const user = session.getUser() || {};
-    this.state = {
-      name: user.name || '',
-      location: user.location || '',
-      department: user.department || '',
-      currentPassword: '',
-      password: '',
-      message: null,
-      error: null
-    };
-    this.onSubmit = this.onSubmit.bind(this);
+const LOCATIONS = ['Hamburg', 'Berlin', 'München'];
+
+// Profil im Konto (function component since 2024, still German only)
+export default function ProfileForm() {
+  const user = session.getUser() || {};
+  const [form, setForm] = useState({
+    name: user.name || '',
+    location: user.location || '',
+    department: user.department || '',
+    currentPassword: '',
+    password: ''
+  });
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
+
+  // the session can arrive after the first render (reload on /account)
+  useEffect(() => session.subscribe(u => {
+    if (!u) return;
+    setForm(f => Object.assign({}, f, {
+      name: f.name || u.name || '',
+      location: f.location || u.location || '',
+      department: f.department || u.department || ''
+    }));
+  }), []);
+
+  function set(name, value) {
+    setForm(f => Object.assign({}, f, { [name]: value }));
   }
 
-  onSubmit(e) {
+  function onSubmit(e) {
     e.preventDefault();
-    const body = { name: this.state.name, location: this.state.location, department: this.state.department };
-    if (this.state.password) {
-      body.password = this.state.password;
-      body.currentPassword = this.state.currentPassword;
+    const body = { name: form.name, location: form.location, department: form.department };
+    if (form.password) {
+      body.password = form.password;
+      body.currentPassword = form.currentPassword;
     }
-    this.setState({ message: null, error: null });
-    xhr.put('/auth/me', body, (err) => {
+    setMessage(null);
+    setError(null);
+    xhr.put('/auth/me', body, err => {
       if (err) {
-        this.setState({ error: err.message });
+        setError(err.message);
         return;
       }
       session.load();
-      this.setState({ message: 'Gespeichert.', password: '', currentPassword: '' });
+      setMessage('Gespeichert.');
+      setForm(f => Object.assign({}, f, { password: '', currentPassword: '' }));
     });
   }
 
-  render() {
-    return (
-      <form className="form profile-form" onSubmit={this.onSubmit}>
-        <h2>Profil</h2>
-        {this.state.message && <div className="success">{this.state.message}</div>}
-        {this.state.error && <div className="error">{this.state.error}</div>}
-        <label>
-          Name
-          <input value={this.state.name} onChange={e => this.setState({ name: e.target.value })} />
-        </label>
-        <label>
-          Meine Bibliothek
-          <select value={this.state.location} onChange={e => this.setState({ location: e.target.value })}>
-            <option value="">keine</option>
-            <option>Hamburg</option>
-            <option>Berlin</option>
-            <option>München</option>
-          </select>
-        </label>
-        <label>
-          Abteilung
-          <input value={this.state.department} onChange={e => this.setState({ department: e.target.value })} />
-        </label>
-        <label>
-          Aktuelles Passwort
-          <input
-            type="password"
-            value={this.state.currentPassword}
-            autoComplete="current-password"
-            onChange={e => this.setState({ currentPassword: e.target.value })}
-          />
-        </label>
-        <label>
-          Neues Passwort
-          <input
-            type="password"
-            value={this.state.password}
-            autoComplete="new-password"
-            onChange={e => this.setState({ password: e.target.value })}
-          />
-        </label>
-        <button type="submit">Speichern</button>
-      </form>
-    );
-  }
+  return (
+    <form className="form profile-form" onSubmit={onSubmit}>
+      <h2>Profil</h2>
+      <div aria-live="polite">
+        {message && <div className="success">{message}</div>}
+        {error && <div className="error" role="alert">{error}</div>}
+      </div>
+      <label>
+        Name
+        <input value={form.name} autoComplete="name" onChange={e => set('name', e.target.value)} />
+      </label>
+      <label>
+        Meine Bibliothek
+        <select value={form.location} onChange={e => set('location', e.target.value)}>
+          <option value="">keine</option>
+          {LOCATIONS.map(l => <option key={l}>{l}</option>)}
+        </select>
+      </label>
+      <label>
+        Abteilung
+        <input value={form.department} autoComplete="organization-title" onChange={e => set('department', e.target.value)} />
+      </label>
+      <label>
+        Aktuelles Passwort
+        <input
+          type="password"
+          value={form.currentPassword}
+          autoComplete="current-password"
+          onChange={e => set('currentPassword', e.target.value)}
+        />
+      </label>
+      <label>
+        Neues Passwort
+        <input
+          type="password"
+          value={form.password}
+          autoComplete="new-password"
+          minLength={6}
+          aria-describedby="password-hint"
+          onChange={e => set('password', e.target.value)}
+        />
+        <small id="password-hint">mindestens 6 Zeichen</small>
+      </label>
+      <button type="submit">Speichern</button>
+    </form>
+  );
 }
-
-export default ProfileForm;

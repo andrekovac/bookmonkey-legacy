@@ -46,10 +46,10 @@ class Header extends React.Component {
     return (
       <header className="header">
         <div className="header-inner">
-          <Link to="/" className="logo">
+          <Link to="/" className="logo" aria-label={'BookMonkey, ' + t('nav.catalogue')}>
             BookMonkey
           </Link>
-          <nav className="nav">
+          <nav className="nav" aria-label={t('a11y.mainNav')}>
             <Link to="/">{t('nav.catalogue')}</Link>
             {user && <Link to="/loans">{t('nav.loans')}</Link>}
             {user && <Link to="/reservations">{t('nav.reservations')}</Link>}

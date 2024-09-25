@@ -29,6 +29,7 @@ class SearchBox extends React.Component {
         <input
           type="search"
           placeholder="Titel oder Autor..."
+          aria-label="Suche"
           value={this.state.value}
           onChange={this.onChange}
         />

@@ -74,7 +74,7 @@ class Detail extends React.Component {
       <div className="detail">
         <Link to="/" className="detail-back">{t('detail.back')}</Link>
         <div className="detail-main">
-          <img className="detail-cover" src={book.cover} alt={book.title} />
+          <img className="detail-cover" src={book.cover} alt={'Cover: ' + book.title} />
           <div className="detail-info">
             <h1 className="detail-title">{book.title}</h1>
             {book.subtitle && <h2 className="detail-subtitle">{book.subtitle}</h2>}

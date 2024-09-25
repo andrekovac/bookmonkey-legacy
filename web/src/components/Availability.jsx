@@ -96,8 +96,10 @@ export default function Availability({ isbn }) {
       {data.waiting > 0 && (
         <div className="availability__waiting">{data.waiting} {data.waiting === 1 ? 'Person wartet' : 'Personen warten'} auf dieses Buch</div>
       )}
-      {message && <div className="success">{message}</div>}
-      {error && <div className="error">{error}</div>}
+      <div aria-live="polite">
+        {message && <div className="success">{message}</div>}
+        {error && <div className="error">{error}</div>}
+      </div>
       {data.myLoan && (
         <div className="availability__mine">
           Du hast dieses Buch ausgeliehen, Rückgabe bis {data.myLoan.due_at.split('-').reverse().join('.')}.{' '}
@@ -125,7 +127,7 @@ export default function Availability({ isbn }) {
       {data.available > 0 && !message && !data.myLoan && !(data.myReservation && data.myReservation.status === 'ready') && (
         user ? (
           <div className="availability__actions">
-            <select value={location} onChange={e => setLocation(e.target.value)}>
+            <select value={location} onChange={e => setLocation(e.target.value)} aria-label="Standort">
               <option value="">egal wo</option>
               {data.locations.filter(l => l.available > 0).map(l => (
                 <option key={l.location} value={l.location}>{l.location}</option>

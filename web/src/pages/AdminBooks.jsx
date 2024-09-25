@@ -22,7 +22,10 @@ function SortHeader({ column, sort, onSort }) {
   const active = sort.key === column.key;
   const arrow = active ? (sort.order === 'desc' ? ' ▼' : ' ▲') : '';
   return (
-    <th className={(column.num ? 'num ' : '') + 'books-admin__sort' + (active ? ' books-admin__sort--active' : '')}>
+    <th
+      className={(column.num ? 'num ' : '') + 'books-admin__sort' + (active ? ' books-admin__sort--active' : '')}
+      aria-sort={active ? (sort.order === 'desc' ? 'descending' : 'ascending') : 'none'}
+    >
       <button type="button" className="link-button" onClick={() => onSort(column.key)}>{column.label}{arrow}</button>
     </th>
   );
@@ -102,8 +105,8 @@ export default function AdminBooks() {
       <div className="books-admin">
         <div className="books-admin__list">
           <form className="admin-tabs" onSubmit={search}>
-            <input placeholder="Titel oder Autor" value={q} onChange={e => setQ(e.target.value)} />
-            <select value={publisher} onChange={e => { setPublisher(e.target.value); setPage(1); }}>
+            <input placeholder="Titel oder Autor" aria-label="Titel oder Autor" value={q} onChange={e => setQ(e.target.value)} />
+            <select value={publisher} aria-label="Verlag" onChange={e => { setPublisher(e.target.value); setPage(1); }}>
               <option value="">alle Verlage</option>
               {publishers.map(p => <option key={p.publisher} value={p.publisher}>{p.publisher} ({p.count})</option>)}
             </select>

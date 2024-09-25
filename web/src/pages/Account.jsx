@@ -64,7 +64,16 @@ class Account extends React.Component {
             {orders.map(o => (
               <React.Fragment key={o.id}>
                 <tr className="order-row" onClick={() => this.toggle(o.id)}>
-                  <td>Nr. {o.id}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="link-button"
+                      aria-expanded={!!open && open.id === o.id}
+                      onClick={e => { e.stopPropagation(); this.toggle(o.id); }}
+                    >
+                      Nr. {o.id}
+                    </button>
+                  </td>
                   <td>{formatDate(o.created_at)}</td>
                   <td>{STATUS[o.status] || o.status}</td>
                   <td className="num">{formatPrice(o.total_gross)}</td>

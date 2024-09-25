@@ -80,7 +80,7 @@ export default function Reviews({ isbn }) {
           <span className="reviews__avg"> <Stars value={data.average} /> {String(data.average).replace('.', ',')} ({data.count})</span>
         )}
       </h3>
-      {error && <div className="error">{error}</div>}
+      {error && <div className="error" role="alert">{error}</div>}
 
       {user && !editing && (
         <button onClick={startEdit}>{mine ? 'Meine Rezension bearbeiten' : 'Rezension schreiben'}</button>
@@ -93,6 +93,7 @@ export default function Reviews({ isbn }) {
         <form className="reviews__form" onSubmit={submit}>
           <div><Stars value={rating} onChange={setRating} size="big" /></div>
           <textarea
+            aria-label="Rezension"
             rows="5"
             value={text}
             maxLength={2000}

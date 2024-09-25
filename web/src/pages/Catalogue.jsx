@@ -123,7 +123,7 @@ class Catalogue extends React.Component {
         <div className="toolbar">
           <SearchBox value={q} onSearch={this.onSearch} />
           <PublisherFilter value={publisher} onChange={this.onPublisher} />
-          <select className="sort-select" value={sort} onChange={this.onSort}>
+          <select className="sort-select" value={sort} onChange={this.onSort} aria-label={t('search.sort')}>
             {SORT_OPTIONS.map(o => (
               <option key={o.value} value={o.value}>{t(o.label)}</option>
             ))}
