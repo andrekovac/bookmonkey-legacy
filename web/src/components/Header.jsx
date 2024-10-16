@@ -4,6 +4,7 @@ import * as session from '../session';
 import * as cart from '../cart';
 import { t, subscribe as onLanguage } from '../i18n';
 import LanguageSwitch from './LanguageSwitch.jsx';
+import ThemeToggle from './ThemeToggle.jsx';
 
 class Header extends React.Component {
   constructor(props) {
@@ -65,6 +66,7 @@ class Header extends React.Component {
               <Link to="/login">{t('nav.login')}</Link>
             )}
             <LanguageSwitch />
+            <ThemeToggle />
           </nav>
         </div>
       </header>

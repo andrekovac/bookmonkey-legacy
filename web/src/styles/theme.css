@@ -1,0 +1,199 @@
+/*
+ * Dark mode (2024). The older stylesheets have hard coded colors, so dark mode is done here
+ * with overrides on [data-theme='dark'] (set on <html> by hooks/useTheme.js).
+ * New components use the variables directly. Class names: c- component, u- utility, is- state.
+ */
+
+:root {
+  --bm-bg: #faf7f2;
+  --bm-surface: #fff;
+  --bm-text: #2b2b2b;
+  --bm-muted: #8a7f73;
+  --bm-border: #e6ded3;
+  --bm-brand: #7a3e1d;
+  --bm-brand-text: #fff;
+  --bm-link: #7a3e1d;
+  --bm-accent: #a3330f;
+  --bm-ok-bg: #e3f4e1;
+  --bm-ok-text: #23621a;
+  --bm-error-bg: #fbe3e1;
+  --bm-error-text: #8a1c12;
+  --bm-input-bg: #fff;
+  --bm-input-border: #c9bfb3;
+  --bm-hover: #f3e7dc;
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --bm-bg: #1d1a17;
+  --bm-surface: #27231f;
+  --bm-text: #ece6de;
+  --bm-muted: #a59b90;
+  --bm-border: #3d3630;
+  --bm-brand: #4a2611;
+  --bm-brand-text: #f6e9dc;
+  --bm-link: #e7a878;
+  --bm-accent: #f08a62;
+  --bm-ok-bg: #1f3a1c;
+  --bm-ok-text: #b8e2b1;
+  --bm-error-bg: #47201b;
+  --bm-error-text: #f5c1b9;
+  --bm-input-bg: #2f2a25;
+  --bm-input-border: #544a41;
+  --bm-hover: #3a3129;
+  color-scheme: dark;
+}
+
+/* overrides for main.css and friends */
+
+[data-theme='dark'] body {
+  background: var(--bm-bg);
+  color: var(--bm-text);
+}
+
+[data-theme='dark'] a {
+  color: var(--bm-link);
+}
+
+[data-theme='dark'] .header {
+  background: var(--bm-brand);
+}
+
+[data-theme='dark'] .nav a,
+[data-theme='dark'] .logo {
+  color: var(--bm-brand-text);
+}
+
+[data-theme='dark'] button {
+  background: var(--bm-surface);
+  color: var(--bm-link);
+  border-color: var(--bm-link);
+}
+
+[data-theme='dark'] button:hover {
+  background: var(--bm-hover);
+}
+
+[data-theme='dark'] button.primary {
+  background: var(--bm-link);
+  color: #1d1a17;
+}
+
+[data-theme='dark'] input,
+[data-theme='dark'] select,
+[data-theme='dark'] textarea {
+  background: var(--bm-input-bg);
+  border-color: var(--bm-input-border);
+  color: var(--bm-text);
+}
+
+[data-theme='dark'] .form input,
+[data-theme='dark'] .form select,
+[data-theme='dark'] .form textarea {
+  color: var(--bm-text);
+}
+
+[data-theme='dark'] .form label,
+[data-theme='dark'] .toolbar-check,
+[data-theme='dark'] .empty,
+[data-theme='dark'] .footer,
+[data-theme='dark'] .loading {
+  color: var(--bm-muted);
+}
+
+[data-theme='dark'] .error {
+  background: var(--bm-error-bg);
+  color: var(--bm-error-text);
+}
+
+[data-theme='dark'] .success {
+  background: var(--bm-ok-bg);
+  color: var(--bm-ok-text);
+}
+
+/* cards and detail */
+
+[data-theme='dark'] .book-card,
+[data-theme='dark'] .detail-abstract,
+[data-theme='dark'] .admin-box,
+[data-theme='dark'] .admin-table,
+[data-theme='dark'] .c-settings,
+[data-theme='dark'] .c-tile,
+[data-theme='dark'] .c-chart {
+  background: var(--bm-surface);
+  border-color: var(--bm-border);
+  color: var(--bm-text);
+}
+
+[data-theme='dark'] .book-card__author,
+[data-theme='dark'] .detail-author,
+[data-theme='dark'] .detail-facts th,
+[data-theme='dark'] .admin-table th,
+[data-theme='dark'] .admin-count,
+[data-theme='dark'] .admin-table__sub,
+[data-theme='dark'] .c-tile__label,
+[data-theme='dark'] .c-search__snippet {
+  color: var(--bm-muted);
+}
+
+[data-theme='dark'] .admin-table td,
+[data-theme='dark'] .admin-table th {
+  border-color: var(--bm-border);
+}
+
+[data-theme='dark'] .admin-nav {
+  border-color: var(--bm-link);
+}
+
+[data-theme='dark'] .admin-nav a.active {
+  background: var(--bm-link);
+  color: #1d1a17;
+}
+
+[data-theme='dark'] .c-chart__tick line {
+  stroke: var(--bm-border);
+}
+
+[data-theme='dark'] .c-chart__tick text,
+[data-theme='dark'] .c-chart__label {
+  fill: var(--bm-muted);
+}
+
+[data-theme='dark'] .c-search__snippet mark {
+  background: #5a4520;
+}
+
+[data-theme='dark'] .c-tile.is-warning,
+[data-theme='dark'] .c-report__table tr.is-late td {
+  background: #3b2420;
+}
+
+[data-theme='dark'] .c-badge {
+  background: #3d3027;
+  color: var(--bm-brand-text);
+}
+
+[data-theme='dark'] .u-muted {
+  color: var(--bm-muted);
+}
+
+/* the theme button in the header */
+
+.c-theme-toggle {
+  margin-left: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: transparent;
+  color: #fff;
+  padding: 1px 7px;
+  font-size: 13px;
+}
+
+.c-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme='dark'] .c-theme-toggle {
+  color: var(--bm-brand-text);
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.35);
+}

@@ -177,5 +177,11 @@
   "a11y": {
     "skip": "Zum Inhalt springen",
     "mainNav": "Hauptnavigation"
+  },
+  "theme": {
+    "label": "Darstellung",
+    "auto": "wie im System",
+    "light": "hell",
+    "dark": "dunkel"
   }
 }

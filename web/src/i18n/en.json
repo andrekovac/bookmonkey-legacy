@@ -177,5 +177,11 @@
   "a11y": {
     "skip": "Skip to content",
     "mainNav": "Main navigation"
+  },
+  "theme": {
+    "label": "Appearance",
+    "auto": "like the system",
+    "light": "light",
+    "dark": "dark"
   }
 }
