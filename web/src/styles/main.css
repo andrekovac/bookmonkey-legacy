@@ -244,6 +244,7 @@ textarea {
   font-weight: normal;
   font-size: 0.85em;
   margin-right: 6px;
+  white-space: nowrap;
 }
 
 .price__badge {

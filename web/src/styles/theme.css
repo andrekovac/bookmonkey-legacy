@@ -197,3 +197,25 @@
   background: transparent;
   border-color: rgba(255, 255, 255, 0.35);
 }
+
+/* prices */
+
+[data-theme='dark'] .price--discount {
+  color: var(--bm-accent);
+}
+
+[data-theme='dark'] .price__regular,
+[data-theme='dark'] .price__vat,
+[data-theme='dark'] .price--none {
+  color: var(--bm-muted);
+}
+
+[data-theme='dark'] .price__badge {
+  background: var(--bm-accent);
+  color: #1d1a17;
+}
+
+[data-theme='dark'] .book-card__price,
+[data-theme='dark'] .detail-price {
+  color: var(--bm-link);
+}
