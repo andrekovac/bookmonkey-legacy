@@ -122,3 +122,11 @@
   font-size: 12px;
   color: #a3330f;
 }
+
+.checkout-net {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #6d645b;
+  margin-top: 4px;
+}

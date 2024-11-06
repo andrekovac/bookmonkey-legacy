@@ -437,6 +437,7 @@ function cartFor(userId) {
       qty: r.qty,
       price: r.price,
       discount: discount || null,
+      price_net: net,
       price_gross: pricing.gross(net),
       line_total: line,
       currency: r.currency,

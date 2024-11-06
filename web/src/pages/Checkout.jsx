@@ -95,8 +95,12 @@ class Checkout extends React.Component {
     if (this.state.order) return this.renderDone();
     const { form, error, busy } = this.state;
     const items = this.state.cart.items;
-    let sum = 0;
-    items.forEach(i => { sum += i.line_total; });
+    // Summe wie auf der Rechnung: erst netto summieren, dann 7 % MwSt (so rechnet POST /orders)
+    let net = 0;
+    items.forEach(i => { net += i.price_net * i.qty; });
+    const totalNet = Math.round(net * 100) / 100;
+    const sum = Math.round(totalNet * 1.07 * 100) / 100;
+    const vat = Math.round((sum - totalNet) * 100) / 100;
 
     return (
       <div className="checkout">
@@ -137,10 +141,16 @@ class Checkout extends React.Component {
                 </li>
               ))}
             </ul>
+            <div className="checkout-net">
+              netto <span>{formatPrice(totalNet)}</span>
+            </div>
+            <div className="checkout-net">
+              7 % MwSt. <span>{formatPrice(vat)}</span>
+            </div>
             <div className="checkout-sum">
               Gesamt <span>{formatPrice(sum)}</span>
             </div>
-            <div className="checkout-hint">inkl. 7 % MwSt., versandkostenfrei</div>
+            <div className="checkout-hint">versandkostenfrei</div>
           </div>
         </div>
       </div>
