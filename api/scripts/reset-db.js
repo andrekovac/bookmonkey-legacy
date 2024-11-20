@@ -3,6 +3,7 @@
 const fs = require('fs');
 const db = require('../db');
 const seed = require('../seed/seed');
+const fixes2024 = require('../seed/fixes-2024');
 
 if (db.DB_FILE !== ':memory:') {
   ['', '-journal', '-wal', '-shm'].forEach(function (suffix) {
@@ -13,5 +14,7 @@ if (db.DB_FILE !== ':memory:') {
 
 const conn = db.open();
 seed.run(conn);
+// corrections from 2024, so a fresh database looks like the live one
+fixes2024.run(conn);
 db.close();
 console.log('database ready: ' + db.DB_FILE);
