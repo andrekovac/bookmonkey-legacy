@@ -202,6 +202,52 @@ function revenuePerMonth(query) {
   };
 }
 
+// loans per department (users.department, free text from the profile, so "IT" and "it" are
+// two departments). People without a department are counted as null.
+function byDepartment(query) {
+  const months = range(query);
+  return db.open().prepare(`SELECT u.department AS department,
+      COUNT(l.id) AS loans,
+      COUNT(DISTINCT l.user_id) AS readers,
+      SUM(CASE WHEN l.returned_at IS NULL AND l.due_at < ? THEN 1 ELSE 0 END) AS overdue
+    FROM loans l JOIN users u ON u.id = l.user_id
+    WHERE l.borrowed_at >= ? AND l.borrowed_at < ?
+    GROUP BY u.department
+    ORDER BY loans DESC, department`).all(utils.today(), firstDay(months[0]), endOf(months[months.length - 1]))
+    .map(function (r) {
+      r.per_reader = r.readers ? Math.round((r.loans / r.readers) * 10) / 10 : 0;
+      return r;
+    });
+}
+
+// Ladenhüter: books with copies that nobody borrowed in the range (oldest copies first)
+function neverBorrowed(query) {
+  const months = range(query);
+  return db.open().prepare(`SELECT b.id, b.isbn, b.title, b.author, b.publisher,
+      COUNT(c.id) AS copies,
+      MIN(c.created_at) AS since,
+      (SELECT MAX(l.borrowed_at) FROM loans l JOIN copies c2 ON c2.id = l.copy_id WHERE c2.book_id = b.id) AS last_loan
+    FROM books b JOIN copies c ON c.book_id = b.id AND c.status <> 'lost'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM loans l JOIN copies c3 ON c3.id = l.copy_id
+      WHERE c3.book_id = b.id AND l.borrowed_at >= ? AND l.borrowed_at < ?
+    )
+    GROUP BY b.id
+    ORDER BY last_loan IS NOT NULL, last_loan, b.title`).all(firstDay(months[0]), endOf(months[months.length - 1]));
+}
+
+// copies per location and status
+function stock() {
+  const rows = db.open().prepare(`SELECT location, status, COUNT(*) AS n FROM copies GROUP BY location, status ORDER BY location`).all();
+  const byLocation = {};
+  rows.forEach(function (r) {
+    if (!byLocation[r.location]) byLocation[r.location] = { location: r.location, total: 0 };
+    byLocation[r.location][r.status] = r.n;
+    byLocation[r.location].total += r.n;
+  });
+  return Object.keys(byLocation).sort().map(k => byLocation[k]);
+}
+
 // the four numbers on top of the reports page
 function summary() {
   const conn = db.open();
@@ -226,5 +272,8 @@ module.exports = {
   topBooks,
   waitlists,
   revenuePerMonth,
+  byDepartment,
+  neverBorrowed,
+  stock,
   summary
 };

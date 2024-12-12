@@ -99,7 +99,9 @@
       "overdue": "Overdue",
       "top": "Top books",
       "waitlists": "Waiting lists",
-      "revenue": "Revenue"
+      "revenue": "Revenue",
+      "departments": "Departments",
+      "stock": "Stock"
     },
     "summary": {
       "openLoans": "open loans",
@@ -148,6 +150,29 @@
       "gross": "gross",
       "sum": "Total",
       "hint": "Cancelled orders are not counted. Date = order date, not shipping date."
+    },
+    "departments": {
+      "title": "Loans by department",
+      "department": "Department",
+      "none": "no department",
+      "readers": "people",
+      "perReader": "per person",
+      "hint": "The department comes from the profile (free text)."
+    },
+    "stock": {
+      "title": "Copies by location",
+      "total": "total",
+      "idle": "Not borrowed in the last {months} months",
+      "noIdle": "Every book was borrowed.",
+      "lastLoan": "last loan",
+      "never": "never",
+      "status": {
+        "available": "on the shelf",
+        "on_loan": "on loan",
+        "on_hold": "hold shelf",
+        "repair": "repair",
+        "lost": "lost"
+      }
     }
   },
   "pager": {

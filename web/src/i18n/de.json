@@ -99,7 +99,9 @@
       "overdue": "Überfällig",
       "top": "Top-Bücher",
       "waitlists": "Wartelisten",
-      "revenue": "Umsatz"
+      "revenue": "Umsatz",
+      "departments": "Abteilungen",
+      "stock": "Bestand"
     },
     "summary": {
       "openLoans": "offene Ausleihen",
@@ -148,6 +150,29 @@
       "gross": "brutto",
       "sum": "Summe",
       "hint": "Ohne stornierte Bestellungen. Datum = Bestelldatum, nicht Versand."
+    },
+    "departments": {
+      "title": "Ausleihen nach Abteilung",
+      "department": "Abteilung",
+      "none": "ohne Abteilung",
+      "readers": "Personen",
+      "perReader": "pro Person",
+      "hint": "Die Abteilung steht im Profil (Freitext)."
+    },
+    "stock": {
+      "title": "Exemplare nach Standort",
+      "total": "gesamt",
+      "idle": "Nicht ausgeliehen in den letzten {months} Monaten",
+      "noIdle": "Jedes Buch wurde ausgeliehen.",
+      "lastLoan": "letzte Ausleihe",
+      "never": "nie",
+      "status": {
+        "available": "im Regal",
+        "on_loan": "ausgeliehen",
+        "on_hold": "Abholregal",
+        "repair": "Reparatur",
+        "lost": "verloren"
+      }
     }
   },
   "pager": {

@@ -7,7 +7,8 @@ import useLanguage from '../hooks/useLanguage';
 import { formatDate, formatPrice } from '../utils/format';
 import '../styles/reports.css';
 
-const TABS = ['loans', 'overdue', 'top', 'waitlists', 'revenue'];
+const TABS = ['loans', 'overdue', 'top', 'waitlists', 'departments', 'stock', 'revenue'];
+const STATUSES = ['available', 'on_loan', 'on_hold', 'repair', 'lost'];
 const MONTH_CHOICES = [3, 6, 12, 24];
 
 // "2024-03" -> "03/24" (short enough for the chart axis)
@@ -241,6 +242,107 @@ function Waitlists() {
   );
 }
 
+function Departments({ months }) {
+  const { t } = useLanguage();
+  const { data, error } = useReport('/admin/reports/departments', { months: months });
+  if (error) return <div className="error">{error}</div>;
+  if (!data) return <div className="loading">{t('common.loading')}</div>;
+  return (
+    <section className="c-report">
+      <div className="c-report__head">
+        <h2>{t('reports.departments.title')}</h2>
+        <CsvLink path="/admin/reports/departments" query={{ months: months }} />
+      </div>
+      <BarChart
+        data={data.map(r => ({ label: r.department || t('reports.departments.none'), value: r.loans }))}
+        title={t('reports.departments.title')}
+        height={220}
+      />
+      <table className="admin-table c-report__table">
+        <thead>
+          <tr>
+            <th>{t('reports.departments.department')}</th>
+            <th className="num">{t('reports.loans.loans')}</th>
+            <th className="num">{t('reports.departments.readers')}</th>
+            <th className="num">{t('reports.departments.perReader')}</th>
+            <th className="num">{t('reports.summary.overdue')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map(r => (
+            <tr key={r.department || '-'}>
+              <td>{r.department || <span className="u-muted">{t('reports.departments.none')}</span>}</td>
+              <td className="num">{r.loans}</td>
+              <td className="num">{r.readers}</td>
+              <td className="num">{r.per_reader}</td>
+              <td className="num">{r.overdue}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="admin-count">{t('reports.departments.hint')}</p>
+    </section>
+  );
+}
+
+function Stock({ months }) {
+  const { t } = useLanguage();
+  const { data, error } = useReport('/admin/reports/stock', { months: months });
+  if (error) return <div className="error">{error}</div>;
+  if (!data) return <div className="loading">{t('common.loading')}</div>;
+  return (
+    <section className="c-report">
+      <h2>{t('reports.stock.title')}</h2>
+      <table className="admin-table c-report__table">
+        <thead>
+          <tr>
+            <th>{t('reports.location')}</th>
+            {STATUSES.map(s => <th key={s} className="num">{t('reports.stock.status.' + s)}</th>)}
+            <th className="num">{t('reports.stock.total')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.locations.map(l => (
+            <tr key={l.location}>
+              <td>{l.location}</td>
+              {STATUSES.map(s => <td key={s} className="num">{l[s] || 0}</td>)}
+              <td className="num">{l.total}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="c-report__head">
+        <h2>{t('reports.stock.idle', { months: months })}</h2>
+        <CsvLink path="/admin/reports/stock" query={{ months: months }} />
+      </div>
+      {data.neverBorrowed.length === 0 ? (
+        <div className="empty">{t('reports.stock.noIdle')}</div>
+      ) : (
+        <table className="admin-table c-report__table">
+          <thead>
+            <tr>
+              <th>{t('reports.overdue.book')}</th>
+              <th>{t('detail.publisher')}</th>
+              <th className="num">{t('reports.waitlists.copies')}</th>
+              <th>{t('reports.stock.lastLoan')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.neverBorrowed.map(b => (
+              <tr key={b.id}>
+                <td><Link to={'/books/' + b.isbn}>{b.title}</Link><div className="admin-table__sub">{b.author}</div></td>
+                <td>{b.publisher}</td>
+                <td className="num">{b.copies}</td>
+                <td>{b.last_loan ? formatDate(b.last_loan) : t('reports.stock.never')}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  );
+}
+
 function Revenue({ months }) {
   const { t } = useLanguage();
   const { data, error } = useReport('/admin/reports/revenue', { months: months });
@@ -330,7 +432,7 @@ export default function AdminReports() {
               </button>
             ))}
           </div>
-          {(tab === 'loans' || tab === 'top' || tab === 'revenue') && (
+          {['loans', 'top', 'revenue', 'departments', 'stock'].indexOf(tab) !== -1 && (
             <label className="c-reports__months">
               {t('reports.period')}{' '}
               <select value={months} onChange={e => setMonths(parseInt(e.target.value, 10))}>
@@ -343,6 +445,8 @@ export default function AdminReports() {
         {tab === 'overdue' && <Overdue />}
         {tab === 'top' && <TopBooks months={months} />}
         {tab === 'waitlists' && <Waitlists />}
+        {tab === 'departments' && <Departments months={months} />}
+        {tab === 'stock' && <Stock months={months} />}
         {tab === 'revenue' && <Revenue months={months} />}
       </div>
     </AdminOnly>

@@ -107,4 +107,40 @@ router.get('/admin/reports/revenue', function (req, res) {
   }
 });
 
+router.get('/admin/reports/departments', function (req, res) {
+  try {
+    const rows = reports.byDepartment(req.query);
+    if (!wantsCsv(req)) return res.json(rows);
+    csv.send(res, filename('abteilungen'), rows, [
+      { key: r => r.department || '(ohne)', label: 'Abteilung' },
+      { key: 'loans', label: 'Ausleihen' },
+      { key: 'readers', label: 'Personen' },
+      { key: 'per_reader', label: 'pro Person' },
+      { key: 'overdue', label: 'überfällig' }
+    ]);
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// Bestand: copies per location + books nobody borrowed in the range
+router.get('/admin/reports/stock', function (req, res) {
+  try {
+    const idle = reports.neverBorrowed(req.query);
+    if (wantsCsv(req)) {
+      return csv.send(res, filename('ladenhueter'), idle, [
+        { key: 'isbn', label: 'ISBN' },
+        { key: 'title', label: 'Titel' },
+        { key: 'author', label: 'Autor' },
+        { key: 'publisher', label: 'Verlag' },
+        { key: 'copies', label: 'Exemplare' },
+        { key: 'last_loan', label: 'letzte Ausleihe' }
+      ]);
+    }
+    res.json({ locations: reports.stock(), neverBorrowed: idle });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
 module.exports = router;
