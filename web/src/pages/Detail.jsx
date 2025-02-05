@@ -85,6 +85,7 @@ class Detail extends React.Component {
                 <tr><th>{t('detail.published')}</th><td>{formatDate(book.publishedAt)}</td></tr>
                 <tr><th>{t('detail.pages')}</th><td>{book.numPages}</td></tr>
                 <tr><th>{t('detail.isbn')}</th><td>{book.isbn}</td></tr>
+                {book.isbn10 && <tr><th>{t('detail.isbn10')}</th><td>{book.isbn10}</td></tr>}
               </tbody>
             </table>
             <div className="detail-price"><Price book={book} showVat /></div>

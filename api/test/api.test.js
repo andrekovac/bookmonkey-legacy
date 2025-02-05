@@ -46,6 +46,14 @@ test('search by title', async function () {
   assert.strictEqual(books.length, 7);
 });
 
+test('search by isbn-10 or plain isbn-13', async function () {
+  let books = await (await fetch(base + '/books?q=0-7475-3269-9')).json();
+  assert.strictEqual(books.length, 1);
+  assert.strictEqual(books[0].isbn10, '0-7475-3269-9');
+  books = await (await fetch(base + '/books?q=9780747532699')).json();
+  assert.strictEqual(books.length, 1);
+});
+
 test('book detail and series', async function () {
   const res = await fetch(base + '/books/978-0-7475-3269-9');
   const book = await res.json();

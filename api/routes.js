@@ -38,6 +38,7 @@ function toBook(row) {
   const price = pricing.forBook(row);
   return {
     isbn: row.isbn,
+    isbn10: isbnLib.format10(row.isbn),
     title: row.title,
     subtitle: row.subtitle,
     author: row.author,
@@ -124,9 +125,14 @@ router.get('/books', function (req, res) {
 
   const where = [];
   const params = [];
-  // title, subtitle, author and description, every word has to match (services/search.js)
-  const term = req.query.q ? search.where(req.query.q) : null;
-  if (term) {
+  // title, subtitle, author and description, every word has to match (services/search.js).
+  // An ISBN (10 or 13, scanner or copied from a supplier list) is looked up directly.
+  const isbnForms = isbnLib.lookupForms(req.query.q);
+  const term = req.query.q && !isbnForms ? search.where(req.query.q) : null;
+  if (isbnForms) {
+    where.push('isbn IN (?, ?)');
+    params.push(...isbnForms);
+  } else if (term) {
     where.push(term.sql);
     params.push(...term.params);
   }

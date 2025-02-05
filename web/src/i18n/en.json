@@ -45,6 +45,7 @@
     "published": "Published",
     "pages": "Pages",
     "isbn": "ISBN",
+    "isbn10": "ISBN-10",
     "addToCart": "Add to cart",
     "added": "In your cart!",
     "description": "Description"

@@ -104,8 +104,54 @@ function normalizeIsbn(value) {
   return String(value || '').replace(/[\s-]/g, '').toUpperCase();
 }
 
+// ISBN-10 check digit (weights 10..2, mod 11, 10 -> X)
+function checkDigit10(first9) {
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(first9[i], 10) * (10 - i);
+  }
+  const rest = (11 - (sum % 11)) % 11;
+  return rest === 10 ? 'X' : String(rest);
+}
+
+// 9780747532699 -> 0747532699. Only 978 has an ISBN-10, 979 does not.
+function to10(value) {
+  let d = digitsOnly(value);
+  if (d.length === 10) return d;
+  if (d.length !== 13 || d.slice(0, 3) !== '978') return null;
+  d = d.slice(3, 12);
+  return d + checkDigit10(d);
+}
+
+// 978-0-7475-3269-9 -> 0-7475-3269-X, for the detail page (the supplier lists and the
+// old inventory labels still use ISBN-10)
+function format10(value) {
+  const ten = to10(value);
+  if (!ten) return null;
+  const parts = format(value).split('-');
+  if (parts.length < 4 || parts[0] !== '978') return ten;
+  parts.shift();
+  parts[parts.length - 1] = ten[9];
+  return parts.join('-');
+}
+
+// a search term that is an ISBN (10 or 13, with or without hyphens) -> both forms we have
+// in the books table, or null for normal words
+function lookupForms(q) {
+  const raw = String(q || '').trim();
+  if (!/^[0-9Xx\s-]+$/.test(raw)) return null;
+  let d = digitsOnly(raw);
+  if (d.length === 10) d = from10(d);
+  if (!d || d.length !== 13) return null;
+  return [format(d), d];
+}
+
 module.exports = {
   normalizeIsbn,
+  to10,
+  format10,
+  lookupForms,
+  checkDigit10,
   digitsOnly,
   isValid,
   from10,

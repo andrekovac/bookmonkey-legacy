@@ -45,6 +45,7 @@
     "published": "Erschienen",
     "pages": "Seiten",
     "isbn": "ISBN",
+    "isbn10": "ISBN-10",
     "addToCart": "In den Warenkorb",
     "added": "Im Warenkorb!",
     "description": "Beschreibung"
