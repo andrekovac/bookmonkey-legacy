@@ -82,6 +82,12 @@ export default function AdminLoans() {
       .catch(err => setError(err.message));
   }
 
+  function sendSummary() {
+    post('/api/v1/admin/jobs/overdue-summary')
+      .then(json => setNotice(json.admins ? 'Wochenübersicht an ' + json.admins + ' Admins verschickt (siehe Mails).' : 'Nichts überfällig, keine Übersicht verschickt.'))
+      .catch(err => setError(err.message));
+  }
+
   return (
     <AdminOnly>
       <h1>Ausleihen</h1>
@@ -112,6 +118,7 @@ export default function AdminLoans() {
           <input placeholder="Titel, Name, E-Mail, Barcode" value={q} onChange={e => setQ(e.target.value)} />
         </form>
         <button className="admin-tabs__job" onClick={runJob}>Mahnlauf jetzt</button>
+        <button className="admin-tabs__job" onClick={sendSummary} title="geht sonst jeden Montag automatisch raus">Wochenübersicht</button>
       </div>
 
       <table className="admin-table">

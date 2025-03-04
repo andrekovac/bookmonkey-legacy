@@ -1,6 +1,7 @@
 // Reminder job. Runs inside the API process on an interval (there is no cron on the server).
 // - 2 days before the due date: "bald fällig"
 // - overdue: reminders after 1, 7 and 14 days, after the 3rd one the admins get a mail
+// - mondays: one summary mail with all overdue loans to the admins (SUMMARY_WEEKDAY, 0 = Sunday)
 const db = require('../db');
 const utils = require('../lib/utils');
 const logger = require('../lib/logger');
@@ -12,6 +13,7 @@ const requestId = require('../lib/request-id');
 
 const REMINDER_AFTER_DAYS = [1, 7, 14];
 const DUE_SOON_DAYS = 2;
+const SUMMARY_WEEKDAY = process.env.SUMMARY_WEEKDAY !== undefined ? parseInt(process.env.SUMMARY_WEEKDAY, 10) : 1;
 
 let timer = null;
 let running = false;
@@ -29,7 +31,7 @@ function openLoans() {
 function run() {
   if (running) return null;
   running = true;
-  const result = { dueSoon: 0, reminders: 0, escalations: 0, expiredHolds: 0 };
+  const result = { dueSoon: 0, reminders: 0, escalations: 0, expiredHolds: 0, summaries: 0 };
   try {
     // Abholfrist (48 h) abgelaufen -> next one on the waitlist
     result.expiredHolds = waitlist.expireHolds();
@@ -61,6 +63,8 @@ function run() {
         }
       }
     });
+
+    if (new Date().getDay() === SUMMARY_WEEKDAY) result.summaries = summary();
   } catch (err) {
     logger.error('[job] overdue failed', err.stack || err);
   } finally {
@@ -70,6 +74,22 @@ function run() {
     logger.info('[job] overdue: ' + result.dueSoon + ' due soon, ' + result.reminders + ' reminders, ' + result.escalations + ' to admins, ' + result.expiredHolds + ' holds expired');
   }
   return result;
+}
+
+// weekly overview for the admins, at most once per week (unless force)
+function summary(force) {
+  const week = utils.weekKey();
+  if (!force && mailer.wasSent('overdue_summary', week)) return 0;
+  const late = openLoans()
+    .filter(loans.isOverdue)
+    .map(function (loan) {
+      loan.daysLate = -loans.daysLeft(loan);
+      return loan;
+    });
+  if (!late.length) return 0;
+  const sent = notifications.overdueSummary(late, week);
+  logger.info('[job] overdue summary: ' + late.length + ' loans, ' + sent + ' admins');
+  return sent;
 }
 
 function start(minutes) {
@@ -90,4 +110,4 @@ function stop() {
   timer = null;
 }
 
-module.exports = { run, start, stop, REMINDER_AFTER_DAYS };
+module.exports = { run, summary, start, stop, REMINDER_AFTER_DAYS };

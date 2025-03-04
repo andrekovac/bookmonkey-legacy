@@ -121,6 +121,51 @@ function overdueEscalation(loan) {
   });
 }
 
+// Montags-Übersicht for the admins (2025): every overdue loan in one mail instead of one
+// mail per loan after the 3rd reminder. Admins with a location only get their location.
+// loans: rows from jobs/overdue.js openLoans() that are overdue, with daysLate
+function overdueSummary(loans, week) {
+  let count = 0;
+  mailer.admins().forEach(function (admin) {
+    const mine = admin.location ? loans.filter(l => l.location === admin.location) : loans;
+    if (!mine.length) return;
+    const byLocation = {};
+    mine.forEach(function (l) {
+      (byLocation[l.location] = byLocation[l.location] || []).push(l);
+    });
+    const lines = [
+      hello(admin.name),
+      '',
+      mine.length === 1
+        ? 'diese Woche ist 1 Ausleihe überfällig:'
+        : 'diese Woche sind ' + mine.length + ' Ausleihen überfällig:'
+    ];
+    Object.keys(byLocation).sort().forEach(function (location) {
+      lines.push('');
+      lines.push(location + ':');
+      byLocation[location]
+        .sort((a, b) => b.daysLate - a.daysLate)
+        .forEach(function (l) {
+          lines.push('- ' + l.title + ' (' + l.barcode + '), ' + l.user_name + ' <' + l.email + '>, ' +
+            l.daysLate + (l.daysLate === 1 ? ' Tag' : ' Tage') + ' über ' + d(l.due_at) +
+            ', ' + l.reminder_count + ' Erinnerung' + (l.reminder_count === 1 ? '' : 'en'));
+        });
+    });
+    lines.push('');
+    lines.push('Liste im Admin: ' + link('/admin/loans'));
+    mailer.send({
+      to: admin.email,
+      userId: admin.id,
+      kind: 'overdue_summary',
+      refId: week,
+      subject: 'Wochenübersicht: ' + mine.length + ' überfällig',
+      body: lines.join('\n')
+    });
+    count++;
+  });
+  return count;
+}
+
 function time(value) {
   return value ? d(value) + ' ' + value.slice(11, 16) + ' Uhr' : '';
 }
@@ -184,4 +229,4 @@ function holdExpired(r) {
   });
 }
 
-module.exports = { dueSoon, overdue, overdueEscalation, holdReady, holdExpired, formatDay: d };
+module.exports = { dueSoon, overdue, overdueEscalation, overdueSummary, holdReady, holdExpired, formatDay: d };

@@ -21,4 +21,9 @@ router.post('/admin/jobs/overdue', function (req, res) {
   res.json(overdueJob.run() || { running: true });
 });
 
+// Wochenübersicht right now (also on other days than monday, e.g. before the team meeting)
+router.post('/admin/jobs/overdue-summary', function (req, res) {
+  res.json({ admins: overdueJob.summary(true) });
+});
+
 module.exports = router;

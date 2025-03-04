@@ -112,6 +112,23 @@ test('overdue job writes reminders into the outbox', function () {
   assert.ok(rows.length >= 1);
 });
 
+test('weekly overdue summary for the admins, once per week', function () {
+  const sent = overdueJob.summary(true);
+  // admin (all locations) + bibliothek (Hamburg); München has nothing overdue
+  assert.strictEqual(sent, 2);
+  const rows = db.open().prepare("SELECT * FROM outbox WHERE kind = 'overdue_summary' ORDER BY id").all();
+  assert.strictEqual(rows.length, 2);
+  assert.ok(rows[0].body.indexOf('Hamburg:') !== -1);
+  assert.strictEqual(overdueJob.summary(), 0);
+});
+
+test('weekKey', function () {
+  const utils = require('../lib/utils');
+  assert.strictEqual(utils.weekKey('2025-03-10'), 202511);
+  assert.strictEqual(utils.weekKey('2024-12-30'), 202501);
+  assert.strictEqual(utils.weekKey('2021-01-03'), 202053);
+});
+
 test('admin series list has the lord of the rings in order', async function () {
   const admin = await login('admin@bookmonkey.example', 'admin2021');
   const list = await (await call(admin, 'GET', '/admin/series')).json();
