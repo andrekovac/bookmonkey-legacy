@@ -72,6 +72,14 @@ test('search', async function () {
   assert.strictEqual(short.status, 400);
 });
 
+test('search treats % and _ as normal characters', async function () {
+  const { status, body } = await get('/books/search?q=%25%25');
+  assert.strictEqual(status, 200);
+  assert.strictEqual(body.total, 0);
+  const under = await get('/books/search?q=__');
+  assert.strictEqual(under.body.total, 0);
+});
+
 test('openapi document', async function () {
   const { status, body } = await get('/openapi.json');
   assert.strictEqual(status, 200);

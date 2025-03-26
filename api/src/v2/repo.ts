@@ -63,13 +63,18 @@ export function publishers(): Publisher[] {
 // LIKE is fine for 50 to 500 books, full text search (FTS5) when the catalogue gets bigger.
 export type SearchField = 'title' | 'subtitle' | 'author' | 'publisher' | 'abstract';
 
+// "50%" or "snake_case" must not act as wildcards
+function likeValue(word: string): string {
+  return '%' + word.replace(/[\\%_]/g, c => '\\' + c) + '%';
+}
+
 export function searchBooks(q: string, fields: SearchField[], limit: number): { rows: BookRow[]; total: number } {
   const words = q.split(/\s+/).filter(Boolean).slice(0, 5);
   const parts: string[] = [];
   const params: Array<string | number> = [];
   words.forEach(word => {
-    parts.push('(' + fields.map(f => f + ' LIKE ?').join(' OR ') + ')');
-    fields.forEach(() => params.push('%' + word + '%'));
+    parts.push('(' + fields.map(f => f + " LIKE ? ESCAPE '\\'").join(' OR ') + ')');
+    fields.forEach(() => params.push(likeValue(word)));
   });
   const whereSql = ' WHERE ' + parts.join(' AND ');
   const conn = db.open();
