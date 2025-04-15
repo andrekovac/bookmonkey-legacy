@@ -3,6 +3,7 @@
 const db = require('../db');
 const pricing = require('../lib/pricing');
 const utils = require('../lib/utils');
+const reservations = require('./reservations');
 
 // opts: { publisher, onlyWithCopies }
 function books(opts) {
@@ -68,4 +69,54 @@ function booksFilename() {
   return 'bookmonkey-buecher-' + utils.today() + '.csv';
 }
 
-module.exports = { books, BOOK_COLUMNS, booksFilename };
+// Warteliste (2025): the library team plans new copies with it ("more than 3 waiting -> buy one").
+// opts: { status (default waiting), bookId }
+function waitlist(opts) {
+  opts = opts || {};
+  const users = {};
+  db.open().prepare('SELECT id, location, department FROM users').all().forEach(function (u) {
+    users[u.id] = u;
+  });
+  return reservations.list({ status: opts.status || 'waiting', bookId: opts.bookId }).map(function (r) {
+    const user = users[r.user_id] || {};
+    return {
+      title: r.title,
+      isbn: r.isbn,
+      position: r.position || '',
+      user_name: r.user_name,
+      email: r.email,
+      location: r.location || user.location || '',
+      department: user.department || '',
+      created_at: shortStamp(r.created_at),
+      source: r.source,
+      status: r.status,
+      expires_at: shortStamp(r.expires_at)
+    };
+  });
+}
+
+// "2024-03-01 09:12:44" and "2024-03-01T08:12:44.000Z" -> "2024-03-01 09:12"
+function shortStamp(value) {
+  if (!value) return '';
+  return String(value).replace('T', ' ').slice(0, 16);
+}
+
+const WAITLIST_COLUMNS = [
+  { key: 'title', label: 'Titel' },
+  { key: 'isbn', label: 'ISBN' },
+  { key: 'position', label: 'Platz' },
+  { key: 'user_name', label: 'Name' },
+  { key: 'email', label: 'E-Mail' },
+  { key: 'location', label: 'Standort' },
+  { key: 'department', label: 'Abteilung' },
+  { key: 'created_at', label: 'vorgemerkt am' },
+  { key: 'source', label: 'über' },
+  { key: 'status', label: 'Status' },
+  { key: 'expires_at', label: 'Abholfrist' }
+];
+
+function waitlistFilename(status) {
+  return 'bookmonkey-warteliste-' + (status || 'waiting') + '-' + utils.today() + '.csv';
+}
+
+module.exports = { books, BOOK_COLUMNS, booksFilename, waitlist, WAITLIST_COLUMNS, waitlistFilename };

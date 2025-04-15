@@ -64,6 +64,7 @@ export default function AdminReservations() {
           </button>
         ))}
         <span className="admin-count admin-tabs__search">{rows.length} Vormerkungen, {groups.length} Bücher</span>
+        <a className="admin-tabs__job" href={'/api/v1/admin/export/waitlist.csv?status=' + status} download>Export (CSV)</a>
       </div>
       {groups.length === 0 && <div className="empty">Keine Vormerkungen.</div>}
       {groups.map(g => (

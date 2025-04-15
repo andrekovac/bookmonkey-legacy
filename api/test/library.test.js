@@ -129,6 +129,17 @@ test('weekKey', function () {
   assert.strictEqual(utils.weekKey('2021-01-03'), 202053);
 });
 
+test('waitlist as csv', async function () {
+  const admin = await login('admin@bookmonkey.example', 'admin2021');
+  const res = await call(admin, 'GET', '/admin/export/waitlist.csv?isbn=978-0-7352-1129-2');
+  assert.strictEqual(res.status, 200);
+  assert.ok(res.headers.get('content-disposition').indexOf('warteliste-waiting') !== -1);
+  const lines = (await res.text()).trim().split('\r\n');
+  assert.ok(lines[0].indexOf('Platz') !== -1);
+  assert.ok(lines.length >= 4);
+  assert.ok(lines.some(l => l.indexOf('anja.richter@example.com') !== -1));
+});
+
 test('admin series list has the lord of the rings in order', async function () {
   const admin = await login('admin@bookmonkey.example', 'admin2021');
   const list = await (await call(admin, 'GET', '/admin/series')).json();

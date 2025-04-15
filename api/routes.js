@@ -729,6 +729,17 @@ router.get('/admin/export/books.csv', function (req, res) {
   csv.send(res, exporter.booksFilename(), rows, exporter.BOOK_COLUMNS);
 });
 
+// Warteliste als CSV, ?status=waiting|ready|...&isbn=...
+router.get('/admin/export/waitlist.csv', function (req, res) {
+  const opts = { status: req.query.status };
+  if (req.query.isbn) {
+    const book = findBook(req.query.isbn);
+    if (!book) return res.status(404).json({ message: 'book not found' });
+    opts.bookId = book.id;
+  }
+  csv.send(res, exporter.waitlistFilename(opts.status), exporter.waitlist(opts), exporter.WAITLIST_COLUMNS);
+});
+
 router.get('/admin/orders', function (req, res) {
   let sql = `SELECT o.*, u.email, (SELECT SUM(qty) FROM order_items i WHERE i.order_id = o.id) AS item_count
     FROM orders o JOIN users u ON u.id = o.user_id`;
