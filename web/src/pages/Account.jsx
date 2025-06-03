@@ -53,6 +53,12 @@ class Account extends React.Component {
         {user && <ProfileForm />}
         {user && <NotificationSettings />}
         {user && <AccountLoans />}
+        {user && (
+          <p className="account-export">
+            <a href="/api/v1/auth/me/export" download>Meine Daten herunterladen (JSON)</a>
+            <span className="account-export__hint"> Alles, was die Bibliothek über dich speichert: Profil, Ausleihen, Vormerkungen, Rezensionen, Bestellungen, Mails.</span>
+          </p>
+        )}
         <h2>Bestellungen</h2>
         {error && <div className="error">{error}</div>}
         {loading && <div className="loading">Lade...</div>}

@@ -30,6 +30,7 @@ const flags = require('./lib/flags');
 const csv = require('./lib/csv');
 const exporter = require('./services/export');
 const search = require('./services/search');
+const privacy = require('./services/privacy');
 
 const router = express.Router();
 
@@ -418,6 +419,15 @@ router.put('/auth/me', auth.requireLogin, function (req, res) {
     db.open().prepare('UPDATE users SET notify = ? WHERE id = ?').run(body.notify, user.id);
   }
   res.json(auth.publicUser(auth.findUser(user.id)));
+});
+
+// Datenauskunft: all my data as a JSON download (link on the account page)
+router.get('/auth/me/export', auth.requireLogin, function (req, res) {
+  const data = privacy.forUser(req.session.uid);
+  if (!data) return res.status(401).json({ error: 'not logged in' });
+  logger.info('[privacy] export for user ' + req.session.uid);
+  res.set('Content-Disposition', 'attachment; filename="' + privacy.filename() + '"');
+  res.json(data);
 });
 
 // ---------------------------------------------------------------------------

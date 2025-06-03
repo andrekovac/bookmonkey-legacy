@@ -183,3 +183,12 @@
   font-size: 13px;
   margin-top: 4px;
 }
+
+.account-export {
+  margin: 1.5rem 0;
+}
+
+.account-export__hint {
+  color: #666;
+  font-size: 0.9em;
+}

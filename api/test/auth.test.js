@@ -70,3 +70,21 @@ test('password change moves an md5 account to bcrypt', async function () {
   const again = await post('/auth/login', { email: 'jonas.becker@example.com', password: 'jonas2023' });
   assert.strictEqual(again.status, 200);
 });
+
+test('data export has my loans and no password hash', async function () {
+  const res = await post('/auth/login', { email: 'mia.schulz@example.com', password: 'lesen123' });
+  const cookie = res.headers.get('set-cookie').split(';')[0];
+  const exp = await fetch(base + '/auth/me/export', { headers: { Cookie: cookie } });
+  assert.strictEqual(exp.status, 200);
+  assert.ok(exp.headers.get('content-disposition').indexOf('meine-daten') !== -1);
+  const data = await exp.json();
+  assert.strictEqual(data.profile.email, 'mia.schulz@example.com');
+  assert.strictEqual(data.profile.passwordType, 'md5');
+  assert.strictEqual(data.profile.password, undefined);
+  assert.ok(data.loans.length >= 1);
+  assert.ok(Array.isArray(data.orders));
+  assert.strictEqual(JSON.stringify(data).indexOf(auth.legacyHash('lesen123')), -1);
+
+  const anonymous = await fetch(base + '/auth/me/export');
+  assert.strictEqual(anonymous.status, 401);
+});
