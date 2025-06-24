@@ -142,7 +142,7 @@ export default function AdminLoans() {
               <td className="mono">{l.barcode}<div className="admin-table__sub">{l.location}</div></td>
               <td>{l.user_name}<div className="admin-table__sub">{l.email}</div></td>
               <td>{formatDate(l.borrowed_at)}</td>
-              <td>{formatDate(l.due_at)}{l.overdue && <div className="due--late">{-l.daysLeft} Tage</div>}</td>
+              <td>{formatDate(l.due_at)}{l.overdue && <div className="due--late">{-l.daysLeft === 1 ? '1 Tag' : -l.daysLeft + ' Tage'}</div>}</td>
               <td>{l.reminder_count || ''}</td>
               <td>{l.returned_at ? formatDate(l.returned_at) : ''}</td>
             </tr>

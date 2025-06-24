@@ -219,3 +219,7 @@
 [data-theme='dark'] .detail-price {
   color: var(--bm-link);
 }
+
+[data-theme='dark'] .account-export__hint {
+  color: var(--bm-muted);
+}
