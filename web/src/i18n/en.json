@@ -58,6 +58,7 @@
     "busy": "One moment...",
     "missing": "Please enter e-mail and password.",
     "wrong": "Wrong e-mail or password.",
+    "tooMany": "Too many attempts. Please try again in 15 minutes.",
     "newHere": "New to BookMonkey?",
     "register": "Create an account"
   },

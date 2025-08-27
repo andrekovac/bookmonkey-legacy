@@ -29,7 +29,7 @@ export default function Login() {
     session.login(email, password, err => {
       if (err) {
         setBusy(false);
-        setError(err.status === 401 ? t('login.wrong') : err.message);
+        setError(err.status === 401 ? t('login.wrong') : err.status === 429 ? t('login.tooMany') : err.message);
         return;
       }
       navigate(nextUrl(location.search));

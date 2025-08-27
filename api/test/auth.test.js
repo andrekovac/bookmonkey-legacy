@@ -88,3 +88,27 @@ test('data export has my loans and no password hash', async function () {
   const anonymous = await fetch(base + '/auth/me/export');
   assert.strictEqual(anonymous.status, 401);
 });
+
+test('login is blocked after 5 wrong passwords', async function () {
+  let res;
+  for (let i = 0; i < 5; i++) {
+    res = await post('/auth/login', { email: 'jonas.becker@example.com', password: 'falsch' + i });
+    assert.strictEqual(res.status, 401);
+  }
+  res = await post('/auth/login', { email: 'jonas.becker@example.com', password: 'jonas2021' });
+  assert.strictEqual(res.status, 429);
+  assert.ok(parseInt(res.headers.get('retry-after'), 10) > 0);
+  // other accounts are not affected
+  res = await post('/auth/login', { email: 'lea.hoffmann@example.com', password: 'buecher' });
+  assert.strictEqual(res.status, 200);
+});
+
+test('rate limit window', function () {
+  const rateLimit = require('../lib/rate-limit');
+  const key = rateLimit.keyFor('X@Example.com ', '::1');
+  assert.strictEqual(key, 'x@example.com|::1');
+  const t0 = Date.UTC(2025, 0, 1);
+  for (let i = 0; i < rateLimit.MAX_FAILS; i++) rateLimit.fail(key, t0);
+  assert.strictEqual(rateLimit.blockedFor(key, t0 + 1000), rateLimit.BLOCK_MINUTES * 60 - 1);
+  assert.strictEqual(rateLimit.blockedFor(key, t0 + rateLimit.BLOCK_MINUTES * 60 * 1000), 0);
+});

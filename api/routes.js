@@ -31,6 +31,7 @@ const csv = require('./lib/csv');
 const exporter = require('./services/export');
 const search = require('./services/search');
 const privacy = require('./services/privacy');
+const rateLimit = require('./lib/rate-limit');
 
 const router = express.Router();
 
@@ -332,10 +333,18 @@ router.post('/auth/login', function (req, res) {
   if (!email || !password) {
     return res.status(400).json({ error: 'email and password required' });
   }
+  const key = rateLimit.keyFor(email, req.ip);
+  const wait = rateLimit.blockedFor(key);
+  if (wait) {
+    res.set('Retry-After', String(wait));
+    return res.status(429).json({ error: 'too many attempts, try again in ' + Math.ceil(wait / 60) + ' minutes' });
+  }
   const user = auth.findUserByEmail(email);
   if (!user || !auth.checkPassword(password, user.password)) {
+    if (rateLimit.fail(key) >= rateLimit.MAX_FAILS) logger.warn('[auth] login blocked for ' + email + ' from ' + req.ip);
     return res.status(401).json({ error: 'wrong email or password' });
   }
+  rateLimit.reset(key);
   session.start(res, user);
   res.json(auth.publicUser(user));
 });
