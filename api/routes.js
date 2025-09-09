@@ -4,7 +4,7 @@
 //   cart, orders
 //   loans, reservations
 //   ---- router.use(auth.requireAdmin) ----
-//   admin: books, orders, users, copies, acquisitions, discounts, loans, outbox
+//   admin: books, orders, users, copies, acquisitions, discounts, loans, outbox (+ audit log)
 // (publishers and outbox are in routes/ already, see routes/index.js)
 const express = require('express');
 const db = require('./db');
@@ -32,6 +32,7 @@ const exporter = require('./services/export');
 const search = require('./services/search');
 const privacy = require('./services/privacy');
 const rateLimit = require('./lib/rate-limit');
+const audit = require('./lib/audit');
 
 const router = express.Router();
 
@@ -200,6 +201,7 @@ router.get('/books/:isbn', function (req, res) {
 router.delete('/books/:isbn', function (req, res) {
   const result = db.open().prepare('DELETE FROM books WHERE isbn = ?').run(req.params.isbn);
   if (!result.changes) return res.status(404).json({ error: 'book not found' });
+  audit.log(req, 'delete', 'book', req.params.isbn);
   res.status(204).end();
 });
 
@@ -728,6 +730,7 @@ router.post('/books', function (req, res) {
   db.open()
     .prepare('INSERT INTO books (' + columns.join(', ') + ') VALUES (' + columns.map(() => '?').join(', ') + ')')
     .run(...values);
+  audit.log(req, 'create', 'book', isbn, { title: body.title });
   res.status(201).json(toBook(findBook(isbn)));
 });
 
@@ -739,7 +742,9 @@ router.put('/books/:isbn', function (req, res) {
   const errors = validateBook(body, false);
   if (errors.length) return res.status(400).json({ error: errors.join(', ') });
 
-  res.json(toBook(bookService.update(existing, body)));
+  const saved = bookService.update(existing, body);
+  audit.log(req, 'update', 'book', saved.isbn, { fields: Object.keys(body) });
+  res.json(toBook(saved));
 });
 
 // Bücher als CSV (Excel), ?publisher=...&copies=1
@@ -824,7 +829,9 @@ router.put('/admin/users/:id', function (req, res) {
   if (body.department !== undefined) {
     db.open().prepare('UPDATE users SET department = ? WHERE id = ?').run(body.department || null, user.id);
   }
-  res.json(auth.publicUser(auth.findUser(user.id)));
+  const after = auth.findUser(user.id);
+  audit.log(req, 'update', 'user', user.id, audit.diff(user, after, ['role', 'location', 'department']));
+  res.json(auth.publicUser(after));
 });
 
 // ---------------------------------------------------------------------------
@@ -905,6 +912,7 @@ router.put('/admin/copies/:id', function (req, res) {
     utils.now(),
     copy.id
   );
+  audit.log(req, 'update', 'copy', copy.barcode, audit.diff(copy, copyRow(copy.id), ['status', 'location', 'shelf', 'note']));
   // back from repair etc. -> maybe somebody is waiting for it
   if (body.status === 'available' && copy.status !== 'available') {
     waitlist.copyReturned(copyRow(copy.id));
@@ -913,8 +921,10 @@ router.put('/admin/copies/:id', function (req, res) {
 });
 
 router.delete('/admin/copies/:id', function (req, res) {
+  const copy = copyRow(req.params.id);
   const result = db.open().prepare('DELETE FROM copies WHERE id = ?').run(req.params.id);
   if (!result.changes) return res.status(404).json({ error: 'copy not found' });
+  audit.log(req, 'delete', 'copy', copy ? copy.barcode : req.params.id, copy ? { isbn: copy.isbn, title: copy.title } : null);
   res.status(204).end();
 });
 
@@ -1031,6 +1041,7 @@ router.post('/admin/discounts', function (req, res) {
     utils.now(),
     utils.now()
   );
+  audit.log(req, 'create', 'discount', Number(r.lastInsertRowid), { name: body.name, percent: body.percent });
   res.status(201).json(discountRow(db.open().prepare('SELECT * FROM discount_rules WHERE id = ?').get(Number(r.lastInsertRowid))));
 });
 
@@ -1053,12 +1064,15 @@ router.put('/admin/discounts/:id', function (req, res) {
     utils.now(),
     rule.id
   );
-  res.json(discountRow(db.open().prepare('SELECT * FROM discount_rules WHERE id = ?').get(rule.id)));
+  const saved = db.open().prepare('SELECT * FROM discount_rules WHERE id = ?').get(rule.id);
+  audit.log(req, 'update', 'discount', rule.id, audit.diff(rule, saved, ['name', 'scope', 'value', 'percent', 'active', 'valid_from', 'valid_until']));
+  res.json(discountRow(saved));
 });
 
 router.delete('/admin/discounts/:id', function (req, res) {
   const result = db.open().prepare('DELETE FROM discount_rules WHERE id = ?').run(req.params.id);
   if (!result.changes) return res.status(404).json({ message: 'rule not found' });
+  audit.log(req, 'delete', 'discount', req.params.id);
   res.status(204).end();
 });
 
@@ -1151,6 +1165,7 @@ router.get('/admin/reservations', function (req, res) {
 });
 
 router.use(moved.reports);
+router.use(moved.audit);
 
 // ---------------------------------------------------------------------------
 // Feature flags (GET /flags for everybody is in routes/flags.js)
@@ -1166,6 +1181,7 @@ router.put('/admin/flags/:name', function (req, res) {
   try {
     const flag = flags.set(req.params.name, body.enabled, req.session.uid);
     logger.info('[flags] ' + flag.name + ' = ' + flag.enabled + ' by user ' + req.session.uid);
+    audit.log(req, 'update', 'flag', flag.name, { enabled: flag.enabled });
     res.json(flag);
   } catch (err) {
     sendError(res, err);

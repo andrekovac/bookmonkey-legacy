@@ -19,6 +19,7 @@ export default function AdminNav() {
       {flags.ENABLE_REPORTS && <NavLink to="/admin/reports">Berichte</NavLink>}
       <NavLink to="/admin/outbox">Mails</NavLink>
       <NavLink to="/admin/flags">Flags</NavLink>
+      <NavLink to="/admin/audit">Protokoll</NavLink>
       <a href="/admin-old/" target="_blank" rel="noopener">Bücher (altes Admin)</a>
     </nav>
   );
