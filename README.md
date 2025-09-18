@@ -6,17 +6,23 @@ and can still buy a book in the shop ("kaufen statt leihen").
 
 ## Quickstart
 
-You need Node.js 24 or newer (the API uses the built-in `node:sqlite`). Nothing else.
+You need Node.js 24 or newer (the API uses the built-in `node:sqlite`, see `.nvmrc`).
+Nothing else, no database server, no Docker.
 
 ```
 npm install
 npm run db:reset
+```
+
+Then start the API and the web app in two terminals:
+
+```
+# terminal 1: API on port 4780
 npm run dev:api
 ```
 
-and in a second terminal:
-
 ```
+# terminal 2: web app on port 5180
 npm run dev:web
 ```
 
@@ -25,12 +31,13 @@ npm run dev:web
 - API: http://localhost:4780/api/v1/books
 - Old admin (books, orders): http://localhost:4780/admin-old/
 
-Test logins (created by `db:reset`):
+Test logins (created by `npm run db:reset`):
 
 | E-Mail | Password | Role |
 |---|---|---|
 | admin@bookmonkey.example | admin2021 | admin |
-| bibliothek@bookmonkey.example | regal2022 | admin (library team) |
+| bibliothek@bookmonkey.example | regal2022 | admin (library team Hamburg) |
+| team.muenchen@bookmonkey.example | isar2023 | admin (library team München) |
 | mia.schulz@example.com | lesen123 | employee |
 | jonas.becker@example.com | jonas2021 | employee |
 | lea.hoffmann@example.com | buecher | employee |
@@ -38,6 +45,7 @@ Test logins (created by `db:reset`):
 | sarah.klein@example.com | klein2022 | employee |
 | murat.yilmaz@example.com | murat2022 | employee |
 | anja.richter@example.com | anja2022 | employee |
+| nina.vogel@example.com | vogel2023 | employee (English) |
 
 Run the tests with `npm test`.
 
