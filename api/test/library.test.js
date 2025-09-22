@@ -144,6 +144,8 @@ test.skip('hold expires after 48 hours and goes to the next person', function ()
 });
 
 test('weekly overdue summary for the admins, once per week', function () {
+  // on mondays the job above has already sent it, start from an empty week
+  db.open().prepare("DELETE FROM outbox WHERE kind = 'overdue_summary'").run();
   const sent = overdueJob.summary(true);
   // admin (all locations) + bibliothek (Hamburg); München has nothing overdue
   assert.strictEqual(sent, 2);
