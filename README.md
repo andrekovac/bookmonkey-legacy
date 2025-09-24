@@ -8,6 +8,7 @@ and can still buy a book in the shop ("kaufen statt leihen").
 
 You need Node.js 24 or newer (the API uses the built-in `node:sqlite`, see `.nvmrc`).
 Nothing else, no database server, no Docker.
+Check `node -v` first (24 or newer).
 
 ```
 npm install
