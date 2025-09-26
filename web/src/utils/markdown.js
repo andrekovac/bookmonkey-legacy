@@ -1,7 +1,7 @@
 // Very small "markdown" for review texts:
 //   **fett**, *kursiv*, [Link](https://...), lines starting with "- " become a list,
 //   empty line = new paragraph.
-// No library on purpose, marked + sanitizer would be 40 kB more for three features.
+// No library on purpose, 40 kB more for three features.
 
 export function renderMarkdown(text) {
   if (!text) return '';
