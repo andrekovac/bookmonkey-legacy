@@ -1,7 +1,7 @@
 name: Claude issue analysis
 
 # Label an issue with "analyse" -> Claude comments feasibility, affected files and risks.
-# Label it with "implement"     -> Claude also opens a draft pull request.
+# Label it with "implement"     -> Claude also pushes a branch and links the prefilled pull request page.
 # Needs one repository secret: CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`) or ANTHROPIC_API_KEY.
 
 on:
@@ -42,7 +42,7 @@ jobs:
             2. Affected files with line ranges.
             3. Likely root cause, if the issue describes a defect. Use git history where it helps.
             4. Risks and what to test.
-            ${{ github.event.label.name == 'implement' && '5. Then implement the change on a new branch, run npm test, and open a draft pull request that links the issue.' || 'Do not change any files.' }}
+            ${{ github.event.label.name == 'implement' && '5. Then implement the change on a new branch, run npm test, push the branch and link the prefilled pull request page (mention the issue).' || 'Do not change any files.' }}
           claude_args: |
             --max-turns 30
-            --allowedTools Read,Grep,Glob,Bash(git log:*),Bash(git show:*),Bash(git blame:*),Bash(npm test:*),Bash(npm install:*),Edit,Write
+            --allowedTools Read,Grep,Glob,Bash(git log:*),Bash(git show:*),Bash(git blame:*),Bash(npm test:*),Bash(npm install:*)${{ github.event.label.name == 'implement' && ',Edit,Write' || '' }}
