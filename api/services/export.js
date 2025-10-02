@@ -4,6 +4,7 @@ const db = require('../db');
 const pricing = require('../lib/pricing');
 const utils = require('../lib/utils');
 const reservations = require('./reservations');
+const auth = require('../lib/auth');
 
 // opts: { publisher, onlyWithCopies }
 function books(opts) {
@@ -119,4 +120,136 @@ function waitlistFilename(status) {
   return 'bookmonkey-warteliste-' + (status || 'waiting') + '-' + utils.today() + '.csv';
 }
 
-module.exports = { books, BOOK_COLUMNS, booksFilename, waitlist, WAITLIST_COLUMNS, waitlistFilename };
+// Rezensionen (2025, export v2): the library leads read them once a quarter in Excel.
+// opts: { isbn, minRating, maxRating }
+function reviews(opts) {
+  opts = opts || {};
+  const where = [];
+  const params = [];
+  if (opts.isbn) {
+    where.push('b.isbn = ?');
+    params.push(opts.isbn);
+  }
+  if (opts.minRating) {
+    where.push('r.rating >= ?');
+    params.push(opts.minRating);
+  }
+  if (opts.maxRating) {
+    where.push('r.rating <= ?');
+    params.push(opts.maxRating);
+  }
+  let sql = `SELECT r.id, r.rating, r.text, r.created_at, r.updated_at, b.isbn, b.title, b.author,
+      u.name AS user_name, u.email, u.location, u.department
+    FROM reviews r
+    JOIN books b ON b.id = r.book_id
+    JOIN users u ON u.id = r.user_id`;
+  if (where.length) sql += ' WHERE ' + where.join(' AND ');
+  sql += ' ORDER BY r.created_at DESC';
+  return db.open().prepare(sql).all(...params).map(function (r) {
+    return {
+      created_at: shortStamp(r.created_at),
+      isbn: r.isbn,
+      title: r.title,
+      author: r.author,
+      rating: r.rating,
+      user_name: r.user_name,
+      email: r.email,
+      location: r.location || '',
+      department: r.department || '',
+      text: r.text || ''
+    };
+  });
+}
+
+const REVIEW_COLUMNS = [
+  { key: 'created_at', label: 'Datum' },
+  { key: 'isbn', label: 'ISBN' },
+  { key: 'title', label: 'Titel' },
+  { key: 'author', label: 'Autor' },
+  { key: 'rating', label: 'Sterne' },
+  { key: 'user_name', label: 'Name' },
+  { key: 'email', label: 'E-Mail' },
+  { key: 'location', label: 'Standort' },
+  { key: 'department', label: 'Abteilung' },
+  { key: 'text', label: 'Text' }
+];
+
+// Ausleihen (2025, export v2), for the yearly report to the works council.
+// opts: { from: 'YYYY-MM-DD', to: 'YYYY-MM-DD', location, open }
+function loans(opts) {
+  opts = opts || {};
+  const where = [];
+  const params = [];
+  if (opts.from) {
+    where.push('l.borrowed_at >= ?');
+    params.push(opts.from);
+  }
+  if (opts.to) {
+    where.push('l.borrowed_at < ?');
+    params.push(utils.addDays(1, opts.to));
+  }
+  if (opts.location) {
+    where.push('c.location = ?');
+    params.push(opts.location);
+  }
+  if (opts.open) where.push('l.returned_at IS NULL');
+  let sql = `SELECT l.*, c.barcode, c.location, b.isbn, b.title
+    FROM loans l
+    JOIN copies c ON c.id = l.copy_id
+    JOIN books b ON b.id = c.book_id`;
+  if (where.length) sql += ' WHERE ' + where.join(' AND ');
+  sql += ' ORDER BY l.borrowed_at';
+
+  return db.open().prepare(sql).all(...params).map(function (l) {
+    const user = auth.findUser(l.user_id) || {};
+    return {
+      id: l.id,
+      borrowed_at: shortStamp(l.borrowed_at),
+      due_at: l.due_at,
+      returned_at: shortStamp(l.returned_at),
+      renewals: l.renewals,
+      reminders: l.reminder_count,
+      barcode: l.barcode,
+      location: l.location,
+      isbn: l.isbn,
+      title: l.title,
+      user_name: user.name || '',
+      email: user.email || '',
+      department: user.department || ''
+    };
+  });
+}
+
+const LOAN_COLUMNS = [
+  { key: 'id', label: 'Nr.' },
+  { key: 'borrowed_at', label: 'ausgeliehen' },
+  { key: 'due_at', label: 'fällig' },
+  { key: 'returned_at', label: 'zurück' },
+  { key: 'renewals', label: 'Verlängerungen' },
+  { key: 'reminders', label: 'Erinnerungen' },
+  { key: 'barcode', label: 'Exemplar' },
+  { key: 'location', label: 'Standort' },
+  { key: 'isbn', label: 'ISBN' },
+  { key: 'title', label: 'Titel' },
+  { key: 'user_name', label: 'Name' },
+  { key: 'email', label: 'E-Mail' },
+  { key: 'department', label: 'Abteilung' }
+];
+
+function filename(name) {
+  return 'bookmonkey-' + name + '-' + utils.today() + '.csv';
+}
+
+module.exports = {
+  books,
+  BOOK_COLUMNS,
+  booksFilename,
+  waitlist,
+  WAITLIST_COLUMNS,
+  waitlistFilename,
+  reviews,
+  REVIEW_COLUMNS,
+  loans,
+  LOAN_COLUMNS,
+  filename
+};

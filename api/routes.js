@@ -705,6 +705,7 @@ router.post('/reservations/link/:token', function (req, res) {
 });
 
 router.use(moved.wishlist);
+router.use(moved.exports);
 
 // ---------------------------------------------------------------------------
 // admin, everything below needs an admin session

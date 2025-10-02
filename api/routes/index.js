@@ -1,6 +1,6 @@
 // routes.js is split up into one file per area, see docs/adr/0001-typescript-migration.md
 //
-// done:   publishers, outbox, wishlist + flags + reports + audit (new, never were in routes.js)
+// done:   publishers, outbox, wishlist + flags + reports + audit + exports (new, never were in routes.js)
 // next:   books, reviews, auth, cart, orders, loans, reservations, admin/*
 //
 // routes.js still mounts these, so the order of the middleware (requireAdmin!) stays the
@@ -11,5 +11,6 @@ module.exports = {
   wishlist: require('./wishlist'),
   flags: require('./flags'),
   reports: require('./reports'),
-  audit: require('./audit')
+  audit: require('./audit'),
+  exports: require('./exports')
 };
