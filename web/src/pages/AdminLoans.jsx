@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AdminOnly from '../components/AdminOnly.jsx';
+import ExportBox from '../components/ExportBox.jsx';
 import { formatDate } from '../utils/format';
 
 const TABS = [
@@ -107,6 +108,8 @@ export default function AdminLoans() {
           <button className="primary" type="submit">Ausleihen</button>
         </form>
       </div>
+
+      <ExportBox />
 
       <div className="admin-tabs">
         {TABS.map(t => (

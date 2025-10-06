@@ -253,3 +253,25 @@ fieldset {
   font-size: 13px;
   min-width: 24px;
 }
+
+/* export v2 */
+.c-export__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.c-export__link {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  text-decoration: none;
+  background: #7a3e1d;
+  color: #fff;
+}
+
+.c-export__link:hover {
+  background: #5e2f15;
+}
