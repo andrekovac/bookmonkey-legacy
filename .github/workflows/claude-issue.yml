@@ -47,4 +47,5 @@ jobs:
             ${{ github.event.label.name == 'implement' && '5. Then implement the change on a new branch, run npm test, push the branch and link the prefilled pull request page (mention the issue).' || 'Do not change any files.' }}
           claude_args: |
             --max-turns 30
+            --permission-mode default
             --allowedTools Read,Grep,Glob,Bash(git log:*),Bash(git show:*),Bash(git blame:*),Bash(npm test:*),Bash(npm install:*)${{ github.event.label.name == 'implement' && ',Edit,Write' || '' }}
