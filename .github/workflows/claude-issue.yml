@@ -32,6 +32,8 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # The action only starts for the label "claude" by default. Our labels are analyse and implement (the if: above filters).
+          label_trigger: ${{ github.event.label.name }}
           track_progress: true
           prompt: |
             Issue #${{ github.event.issue.number }} in ${{ github.repository }}:
